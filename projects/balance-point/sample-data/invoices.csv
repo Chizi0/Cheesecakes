@@ -1,0 +1,6 @@
+invoice_id,customer,amount_cents
+INV-1001,Northstar Studio,120000
+INV-1002,Atlas Supply,85000
+INV-1003,Juniper Labs,240000
+INV-1004,Harbor Collective,65000
+INV-1005,Cedar Works,180000
