@@ -7,11 +7,12 @@ import { normalizeImage, validateItemFields } from './upload.mjs';
 import { searchShopping } from './shopping.mjs';
 import { snoozeReminder, visibleLaundryReminders } from './snooze.mjs';
 import { laundryReminders } from './laundry.mjs';
+import { createReceiptHandler } from './receipt-routes.mjs';
 const project=dirname(fileURLToPath(import.meta.url));
 const mime={'.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css','.jpg':'image/jpeg'};
 const errorWith=(message,status)=>Object.assign(new Error(message),{status});
 const seed=[{id:'sample-top',name:'Sample ivory top',category:'top',availability:'ready',occasions:['daily','dinner']},{id:'sample-bottom',name:'Sample black trousers',category:'bottom',availability:'ready',occasions:['daily','dinner']},{id:'sample-shoes',name:'Sample black shoes',category:'shoes',availability:'ready',occasions:['daily','dinner']},{id:'sample-bag',name:'Sample structured bag',category:'bag',availability:'ready',occasions:['daily','dinner']}];
-export async function createApp({dataDir=join(project,'.ziala-data'),apiKey=process.env.SERPAPI_API_KEY,fetchImpl=fetch,now=()=>new Date().toISOString()}={}){
+export async function createApp({dataDir=join(project,'.ziala-data'),apiKey=process.env.SERPAPI_API_KEY,fetchImpl=fetch,now=()=>new Date().toISOString(),extractReceipt,aiApiKey=process.env.OPENAI_API_KEY,aiModel=process.env.OPENAI_RECEIPT_MODEL,aiFetchImpl=fetch}={}){
  await mkdir(join(dataDir,'images'),{recursive:true});
  const db=join(dataDir,'closet.json'),snoozeFile=join(dataDir,'laundry-snoozes.json');
  async function loadSnoozes(){try{return JSON.parse(await readFile(snoozeFile,'utf8'));}catch(e){if(e.code==='ENOENT')return {};throw e;}}
@@ -26,6 +27,7 @@ export async function createApp({dataDir=join(project,'.ziala-data'),apiKey=proc
   let length=0;const chunks=[];for await(const chunk of req){length+=chunk.length;if(length>8*1024*1024)throw errorWith('Request exceeds upload limit.',413);chunks.push(chunk);}
   try{return JSON.parse(Buffer.concat(chunks).toString());}catch{throw errorWith('Invalid JSON.',400);}
  }
+ const receiptHandler=createReceiptHandler({load,save,transact,apiKey,fetchImpl,extractReceipt,aiApiKey,aiModel,aiFetchImpl});
  const server=createServer(async(req,res)=>{
   const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
   try{
@@ -33,7 +35,8 @@ export async function createApp({dataDir=join(project,'.ziala-data'),apiKey=proc
    if(!['127.0.0.1','localhost'].includes(url.hostname))throw errorWith('Local access only.',403);
    if(req.headers.origin&&req.headers.origin!==origin)throw errorWith('Cross-origin requests are not allowed.',403);
    res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
-   if(req.method==='GET'&&url.pathname==='/api/health')return send(200,{shoppingConfigured:!!apiKey});
+   if(req.method==='POST'&&url.pathname.startsWith('/api/receipts/'))return send(200,await receiptHandler(url.pathname,await jsonBody(req)));
+   if(req.method==='GET'&&url.pathname==='/api/health')return send(200,{shoppingConfigured:!!apiKey,receiptAIConfigured:!!aiApiKey});
    if(req.method==='GET'&&url.pathname==='/api/laundry')return send(200,await transact(laundryState));
    if(['POST','DELETE'].includes(req.method)&&url.pathname.startsWith('/api/laundry/snooze/')){
     const id=decodeURIComponent(url.pathname.slice('/api/laundry/snooze/'.length));
@@ -66,7 +69,7 @@ export async function createApp({dataDir=join(project,'.ziala-data'),apiKey=proc
    if(/^\/uploads\/[a-f0-9-]{36}\.jpg$/.test(url.pathname))file=join(dataDir,'images',url.pathname.split('/').at(-1));
    else {
     const name=url.pathname==='/'?'app.html':url.pathname.slice(1);
-    if(!/^[a-z0-9-]+\.(html|mjs|css)$/.test(name)||name.endsWith('.test.mjs')||['server.mjs','upload.mjs','shopping.mjs'].includes(name))throw errorWith('Not found.',404);
+    if(!/^[a-z0-9-]+\.(html|mjs|css)$/.test(name)||name.endsWith('.test.mjs')||['server.mjs','upload.mjs','shopping.mjs','receipt.mjs','receipt-routes.mjs','receipt-ai.mjs'].includes(name))throw errorWith('Not found.',404);
     file=resolve(project,name);
    }
    const content=await readFile(file);res.writeHead(200,{'Content-Type':mime[extname(file)],'Cache-Control':'no-store'});res.end(content);

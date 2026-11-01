@@ -1,3 +1,4 @@
+import { setupReceipts } from './receipt-ui.mjs';
 import { prepareClothingPhoto } from './client-image.mjs';
 import { reviewCloset } from './availability.mjs';
 import { laundryReminders } from './laundry.mjs';
@@ -15,6 +16,7 @@ function render(){
  for(const item of reviewCloset(items)){
   const card=el('article',null,'item');if(item.imageUrl){const image=el('img');image.src=item.imageUrl;image.alt=item.name;image.loading='lazy';card.append(image);}
   card.append(el('h3',item.name),el('p',`${item.category} · ${item.occasions?.join(', ')||'No occasion tags'}`),el('p',item.reason));
+  if(item.purchase)card.append(el('p',[item.purchase.retailer,item.purchase.sku?`Style ${item.purchase.sku}`:'',item.purchase.color,item.purchase.size?`Size ${item.purchase.size}`:''].filter(Boolean).join(' · ')));
   const button=el('button',item.availability==='ready'?'Move to laundry':'Mark clean');button.onclick=async()=>{button.disabled=true;try{const data=await api(`/api/closet/${encodeURIComponent(item.id)}`,{method:'PATCH',body:JSON.stringify({availability:item.availability==='ready'?'laundry':'ready'})});items=items.map(existing=>existing.id===item.id?data.item:existing);render();await refreshLaundry();}catch(error){message(error.message);button.disabled=false;}};card.append(button);$('items').append(card);
  }
  renderStyle();
@@ -79,3 +81,5 @@ $('shopping-form').onsubmit=async event=>{
 };
 for(const id of ['mode','occasion','date'])$(id).onchange=renderStyle;
 try{items=(await api('/api/closet')).items;await refreshLaundry();render();const health=await api('/api/health');if(!health.shoppingConfigured)message('Closet uploads are ready. Shopping search needs a server API key; setup is in the README.');}catch(error){message(`Start the ZIALA server to load your closet: ${error.message}`);}
+
+setupReceipts({api,message,onImported:async()=>{items=(await api('/api/closet')).items;await refreshLaundry();render();}});
