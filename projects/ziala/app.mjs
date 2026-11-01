@@ -1,3 +1,4 @@
+import { prepareClothingPhoto } from './client-image.mjs';
 import { reviewCloset } from './availability.mjs';
 import { laundryReminders } from './laundry.mjs';
 import { buildClosetOutfits } from './outfits.mjs';
@@ -33,11 +34,10 @@ function renderStyle(){
   $('shopping-status').textContent=decision.action==='in_store'?'Near occasion: look for nearby stores, but store-specific size stock still needs verification.':decision.action==='shopping'?'Future occasion: compare buying candidates and verify an arrival date before the event.':'Closet-first styling. Product search is also available if you choose to browse.';
  }catch(error){$('outfits').append(el('p',error.message));}
 }
-function base64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.onerror=()=>reject(new Error('Could not read the image.'));reader.readAsDataURL(file);});}
 $('upload-form').onsubmit=async event=>{
  event.preventDefault();const form=event.target,button=form.querySelector('button');button.disabled=true;
- try{const data=new FormData(form),file=data.get('photo');if(!file.size||file.size>5*1024*1024)throw new Error('Choose an image up to 5 MB.');
- const result=await api('/api/closet',{method:'POST',body:JSON.stringify({name:data.get('name'),category:data.get('category'),availability:data.get('availability'),occasions:data.get('occasions').split(',').map(s=>s.trim()).filter(Boolean),imageBase64:await base64(file)})});items.push(result.item);form.reset();render();message(`${result.item.name} saved with its photo.`);
+ try{const data=new FormData(form),file=data.get('photo');const prepared=await prepareClothingPhoto(file);
+ const result=await api('/api/closet',{method:'POST',body:JSON.stringify({name:data.get('name'),category:data.get('category'),availability:data.get('availability'),occasions:data.get('occasions').split(',').map(s=>s.trim()).filter(Boolean),imageBase64:prepared.imageBase64})});items.push(result.item);form.reset();render();message(`${result.item.name} saved with its photo.`);
  }catch(error){message(error.message);}finally{button.disabled=false;}
 };
 $('shopping-form').onsubmit=async event=>{

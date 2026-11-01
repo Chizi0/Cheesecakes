@@ -19,7 +19,7 @@ Uploads work without a shopping key. To enable real product searches, put your o
 
 ## Clothing uploads and persistence
 
-- Upload one JPEG, PNG, or WebP at a time, up to 5 MB and 30 megapixels. Animated images and other formats are rejected.
+- Select one JPEG, PNG, or WebP up to 20 MB and 80 megapixels in the browser. The browser scales it to a maximum of 1600 × 1600 before upload, so common 48-megapixel phone photos need not be rejected. Browser decode failures have a distinct message. The server separately enforces a 5 MB, 30-megapixel input limit and decodes/re-encodes the actual uploaded image. Other formats and direct animated uploads are rejected; HEIC is not supported.
 - The server decodes the actual image, applies orientation, resizes to a maximum of 1600 × 1600, re-encodes as JPEG, and strips source metadata. Transparent images are flattened on white.
 - Confirm name, category, ready/laundry state, and occasion tags. Tags are manual; no image-recognition model is connected.
 - Metadata and normalized photos are saved under ignored `.ziala-data/` on the server computer, not in GitHub. `ZIALA_DATA_DIR` can override this directory.
@@ -82,3 +82,5 @@ npm test
 ```
 
 Tests cover the original rules plus real HTTP upload/metadata/image persistence across a server restart, invalid image rejection with no data changes, status updates, cross-origin rejection, and shopping request/response normalization. Shopping tests inject provider fixtures; they are not proof of a live credentialed search. No real provider call is possible without a supplied key. Browser verification status is recorded with the pull request.
+
+The phone-preview fix uses a file data URL rather than a blob URL for image loading. Browser resizing is implemented in `client-image.mjs`; dimensions, size limits, and image-decode errors are reported separately. Dimension tests cover 48-megapixel portrait and landscape photos, but actual phone-browser verification is still pending.
