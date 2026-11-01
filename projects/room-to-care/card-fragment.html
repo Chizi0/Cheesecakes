@@ -10,8 +10,11 @@
 <div aria-live="polite"><span class="rtc-status" data-role="status">Occupied</span><p data-role="patient"></p><p class="rtc-secondary" data-role="staff"></p></div>
 <p data-role="task" class="rtc-secondary"></p><p data-role="timing" class="rtc-secondary"></p>
 <div class="rtc-controls" aria-label="Room workflow actions"><button type="button" data-action="patient_left">Patient left</button><button type="button" data-action="start_cleaning">Start cleaning</button><button type="button" data-action="confirm_ready">Confirm ready</button></div>
-<div class="rtc-controls"><button type="button" class="rtc-main" data-role="assign">Assign sample patient</button><button type="button" data-role="retry" hidden>Retry cleaner assignment</button><button type="button" data-role="reset">Reset sample</button></div>
+<div class="rtc-controls"><button type="button" data-role="retry" hidden>Retry cleaner assignment</button><button type="button" data-role="reset">Reset sample</button></div>
 <p class="rtc-message" data-role="message" role="status" aria-live="polite"></p>
+<h3>Waiting patients</h3>
+<p class="rtc-secondary">Staff-selected priority group A · Standard room · Longest waiting first</p>
+<ol data-role="queue" aria-label="Eligible waiting patients"></ol><p data-role="queue-empty" hidden>No eligible patients waiting.</p>
 <h3>Cleaner availability</h3>
 <div data-role="roster"></div>
 <p class="rtc-secondary">Shift: 08:00–16:00 UTC · A break: 12:00–12:15 · B break: 12:15–12:30. Last assigned: A 09:00, B 09:30.</p>
