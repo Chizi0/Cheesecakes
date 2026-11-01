@@ -1,0 +1,19 @@
+<div id="ziala-policy">
+<style>
+#ziala-policy{color-scheme:light dark;font-family:system-ui,sans-serif;background:light-dark(#f5eef0,#261a20);color:light-dark(#512a38,#f1dce5);padding:24px;border-radius:16px}#ziala-policy *{box-sizing:border-box}#ziala-policy h2{font-size:25px;margin:8px 0 18px}#ziala-policy h3{font-size:18px;margin:10px 0}#ziala-policy p{line-height:1.6}#ziala-policy .zp-muted{font-size:13px;color:light-dark(#775c65,#d4b8c4)}#ziala-policy .zp-kicker{font-size:12px;letter-spacing:.14em}#ziala-policy .zp-controls{display:flex;gap:18px;flex-wrap:wrap}#ziala-policy label{display:grid;gap:8px;font-size:13px;flex:1;min-width:170px;margin:10px 0}#ziala-policy .zp-check{display:flex;align-items:center;min-width:100%;min-height:44px}#ziala-policy input,#ziala-policy select{font:inherit;font-size:16px;min-height:44px;width:100%;padding:10px;border-radius:7px;background:light-dark(#fff,#38232c);color:inherit;border:1px solid light-dark(#b690a0,#ad7d90)}#ziala-policy input[type=checkbox]{width:20px;min-height:20px;height:20px}#ziala-policy .zp-panel{padding:18px;border-radius:12px;background:light-dark(#fff,#38232c);border:1px solid light-dark(#decbd2,#76505f);margin:14px 0}#ziala-policy .zp-option{padding:14px 0;border-top:1px solid light-dark(#eadce1,#674552)}#ziala-policy button{font:inherit;min-height:44px;padding:10px 14px;border-radius:7px;background:light-dark(#f7ebf0,#50313e);color:inherit;border:1px solid light-dark(#b690a0,#ad7d90)}#ziala-policy .zp-item{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 0;border-top:1px solid light-dark(#eadce1,#674552)}#ziala-policy [hidden]{display:none}@media(max-width:420px){#ziala-policy{padding:14px}}
+</style>
+<p class="zp-kicker">ZIALA / STYLING RULES PREVIEW</p>
+<h2>Closet first. A useful fallback.</h2>
+<p class="zp-muted">Sample “today”: <span data-role="today"></span></p>
+<div class="zp-controls">
+<label>Styling request<select data-role="mode"><option value="occasion">Occasion</option><option value="daily">Daily wear</option></select></label>
+<label data-role="date-label">Occasion date<input data-role="date" type="date" required></label>
+<label>Selected size<select data-role="size"><option>S</option><option selected>M</option><option>L</option></select></label>
+
+
+</div>
+<section class="zp-panel" aria-label="Sample closet"><h3>Sample closet</h3><div data-role="closet"></div></section>
+<section data-role="result" aria-live="polite" class="zp-panel"><h3 data-role="title"></h3><p data-role="reason"></p><div data-role="outfits"></div><div data-role="options"></div></section>
+<p data-role="error" role="alert" hidden></p>
+<p class="zp-muted">Mock products, delivery estimates, nearby flags, and size inventory. No stores or shopping services are connected. Closet readiness and occasion tags determine completeness. Color, fit, and visual coordination are not evaluated. Shopping candidates are sample records, not live recommendations.</p>
+</div>
