@@ -58,6 +58,9 @@ Live retailer inventory, geospatial nearby filtering, size-specific delivery est
 
 - `GET /api/health`: reports whether shopping credentials are configured; never returns the key.
 - `GET /api/closet`: saved closet records.
+- `GET /api/laundry`: current laundry reminders, visible reminders, saved snoozes, and server time.
+- `POST /api/laundry/snooze/:id`: persist a future `until` timestamp for an active category reminder.
+- `DELETE /api/laundry/snooze/:id`: cancel that category’s snooze.
 - `POST /api/closet`: JSON metadata plus `imageBase64`, validated and saved as a normalized image.
 - `PATCH /api/closet/:id`: persist a ready/laundry change.
 - `POST /api/shopping/search`: validated search request, server-side provider call.
@@ -73,7 +76,7 @@ This local server rejects foreign origins and unrecognized hosts, limits request
 
 The older previews use separate in-memory sample state and do not modify the saved uploaded closet. For them alone, a static server still works: `python3 -m http.server 8000`.
 
-Laundry reminders check tops and bottoms separately: fewer than two confirmed-ready items plus at least one item in laundry triggers a category reminder. The integrated app displays these counts and reminders. Chosen-time snooze is currently in the older `/index.html` preview only: its date/time picker hides a category reminder until the selected time, then rechecks the closet. The demo clock advances through its 30-minute button; refresh clears snoozes. There are no actual background notifications or recurring automations.
+Laundry reminders check tops and bottoms separately: fewer than two confirmed-ready items plus at least one item in laundry triggers a category reminder. The integrated app displays these counts and reminders. Each category has a “Remind me at” date/time picker. Snoozes are saved under ignored `.ziala-data/laundry-snoozes.json`, independently for tops and bottoms, and survive page refresh and server restart. The picker uses your computer’s local time, which is sent as an absolute UTC timestamp. A snoozed reminder shows its chosen time and a “Show reminder now” control. When the time arrives, the open app rechecks the rule and shows the reminder only if laundry is still needed. Cleaning enough items clears that category’s snooze, so a later laundry cycle starts fresh. Past/invalid times and attempts to snooze a resolved reminder are rejected. The older `/index.html` preview still uses separate sample data and a demo clock. There are no phone/email notifications, background notifications, or recurring automations; reopening the app re-evaluates expired snoozes.
 
 ## Validation
 
@@ -83,4 +86,8 @@ npm test
 
 Tests cover the original rules plus real HTTP upload/metadata/image persistence across a server restart, invalid image rejection with no data changes, status updates, cross-origin rejection, and shopping request/response normalization. Shopping tests inject provider fixtures; they are not proof of a live credentialed search. No real provider call is possible without a supplied key. Browser verification status is recorded with the pull request.
 
-The phone-preview fix uses a file data URL rather than a blob URL for image loading. Browser resizing is implemented in `client-image.mjs`; dimensions, size limits, and image-decode errors are reported separately. Dimension tests cover 48-megapixel portrait and landscape photos, but actual phone-browser verification is still pending.
+The phone-preview fix uses a file data URL rather than a blob URL for image loading. Browser resizing is implemented in `client-image.mjs`; dimensions, size limits, and image-decode errors are reported separately. Dimension tests cover 48-megapixel portrait and landscape photos. The creator confirmed the corrected phone preview worked, and verified integrated uploads, persistence after refresh/restart, and live shopping on their Mac. The saved laundry snooze follow-up still needs a guided browser check.
+
+## Remaining integrations
+
+Receipt extraction and review before saving closet items, Gmail receipt import, and calendar event import are not implemented yet. They remain separate follow-up work. Connecting Gmail or Calendar to ChatGPT does not connect them to this app.
