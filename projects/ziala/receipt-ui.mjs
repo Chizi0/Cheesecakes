@@ -1,7 +1,7 @@
 import {prepareClothingPhoto} from './client-image.mjs';
 export function setupReceipts({api,message,onImported}){
  const root=document.getElementById('receipt-review');
- api('/api/health').then(health=>{document.getElementById('receipt-ai-status').textContent=health.receiptAIConfigured?'AI receipt extraction is connected. You choose when to send receipt text.':'AI receipt extraction is not connected yet. Local receipt reading is available.';}).catch(()=>{});let draftId=null,rows=[],metadata={};
+ api('/api/health').then(health=>{document.getElementById('receipt-ai-status').textContent=health.receiptAIConfigured?'AI key is configured. A successful receipt request will confirm it works.':'AI receipt extraction is not connected yet. Local receipt reading is available.';}).catch(()=>{});let draftId=null,rows=[],metadata={};
  const el=(tag,text)=>{const node=document.createElement(tag);if(text)node.textContent=text;return node;};
  const label=(text,input)=>{const node=el('label',text);node.append(input);return node;};
  const input=(value='')=>{const node=el('input');node.value=value;return node;};
@@ -20,11 +20,11 @@ export function setupReceipts({api,message,onImported}){
   root.replaceChildren();const details=el('details'),summary=el('summary','Review or correct receipt text'),raw=el('textarea');raw.value=text;raw.rows=9;raw.setAttribute('aria-label','Extracted receipt text');
   const parse=el('button','Find item lines again');parse.type='button';parse.onclick=async()=>{parse.disabled=true;try{const result=await api(`/api/receipts/${draftId}/parse`,{method:'POST',body:JSON.stringify({text:raw.value})});rows=result.rows;metadata={};render(raw.value);message('Item suggestions refreshed. Review them again before saving.');}catch(error){message(error.message);parse.disabled=false;}};
   details.append(summary,raw,parse);root.append(details);
-  const consent=input();consent.type='checkbox';const ai=el('button','Use AI to identify retailer and items');ai.type='button';
+  const consent=input();consent.type='checkbox';const ai=el('button','Use AI to identify retailer and items');ai.type='button';const aiStatus=el('p');aiStatus.setAttribute('role','status');
   root.append(el('p','Optional AI extraction sends the receipt text above to OpenAI. Open the text review to remove personal details first. It uses your separately configured API account.'));
-  root.append(label('Send this reviewed receipt text to OpenAI for structured extraction.',consent),ai);
-  ai.onclick=async()=>{if(!consent.checked){message('Confirm sending the reviewed text to OpenAI, or continue with local review.');return;}ai.disabled=true;parse.disabled=true;
-   try{message('AI is identifying the retailer and purchase details…');const result=await api(`/api/receipts/${draftId}/structure`,{method:'POST',body:JSON.stringify({text:raw.value,consent:true})});rows=result.rows;metadata=result.metadata;render(raw.value);message('AI suggestions are ready. Check the source lines and correct uncertain fields before searching or saving.');}catch(error){message(error.message);ai.disabled=false;parse.disabled=false;}
+  root.append(label('Send this reviewed receipt text to OpenAI for structured extraction.',consent),ai,aiStatus);
+  ai.onclick=async()=>{if(!consent.checked){aiStatus.textContent='Confirm sending the reviewed text to OpenAI, or continue with local review.';message(aiStatus.textContent);return;}ai.disabled=true;parse.disabled=true;
+   try{aiStatus.textContent='AI is identifying the retailer and purchase details…';message(aiStatus.textContent);const result=await api(`/api/receipts/${draftId}/structure`,{method:'POST',body:JSON.stringify({text:raw.value,consent:true})});rows=result.rows;metadata=result.metadata;render(raw.value);message('AI suggestions are ready. Check the source lines and correct uncertain fields before searching or saving.');}catch(error){aiStatus.textContent=error.message;message(error.message);ai.disabled=false;parse.disabled=false;}
   };
   const retailer=input(metadata.retailer||''),orderNumber=input(metadata.orderNumber||''),orderDate=input(metadata.orderDate||'');retailer.maxLength=100;orderNumber.maxLength=100;orderDate.maxLength=60;
   const purchase=el('div');purchase.className='fields';purchase.append(label('Retailer (confirm or correct)',retailer),label('Order number — saved locally, excluded from product searches',orderNumber),label('Purchase date as printed',orderDate));root.append(purchase);

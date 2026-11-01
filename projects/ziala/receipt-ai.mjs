@@ -23,12 +23,33 @@ export function validateAIReceipt(value,text){
  });
  return {metadata,rows};
 }
+export async function receiptProviderError(response){
+ let payload;try{payload=await response.json();}catch{payload={};}
+ const error=payload?.error||{},status=Number.isInteger(response.status)?response.status:null;
+ const knownCodes=new Set(['invalid_api_key','insufficient_quota','credit_balance_exhausted','billing_hard_limit_reached','budget_exceeded','rate_limit_exceeded','slow_down','model_not_found','permission_denied','invalid_json_schema','invalid_request_error','unsupported_parameter','invalid_value']);
+ const code=knownCodes.has(error.code)?error.code:null;
+ let reason;
+ if(status===401||code==='invalid_api_key')reason='OpenAI rejected the API key. Check OPENAI_API_KEY in .env and restart ZIALA after correcting it.';
+ else if(['insufficient_quota','credit_balance_exhausted','billing_hard_limit_reached','budget_exceeded'].includes(code)||error.type==='insufficient_quota')reason='OpenAI reports an API quota or billing limit. Check API credits and account/project usage limits.';
+ else if(code==='model_not_found'||status===404)reason='OpenAI could not access the configured receipt model. Check OPENAI_RECEIPT_MODEL and this API project’s model access.';
+ else if(status===403)reason='OpenAI denied this request. Check this API key’s project permissions and account access.';
+ else if(status===429)reason='OpenAI rate-limited this request. Wait briefly before retrying; do not submit repeated requests.';
+ else if(status===400||status===422){
+  reason='OpenAI rejected the extraction request format. This may require a ZIALA code fix; it does not establish a key or credit problem.';
+  const keyword=typeof error.message==='string'?error.message.match(/['"](minimum|maximum|minItems|maxItems|additionalProperties|required|type)['"] is not permitted/i)?.[1]:null;
+  if(keyword)reason+=` Unsupported schema keyword: ${keyword}.`;
+ }else if(status&&status>=500)reason='OpenAI reported a temporary service error. Try again later or use local receipt review.';
+ else reason='The AI service rejected this request. Local receipt review remains available.';
+ const param=typeof error.param==='string'&&/^(model|max_output_tokens|store|input|text\.format(?:\.schema)?)$/.test(error.param)?error.param:null;
+ const diagnostics=[status?`HTTP ${status}`:null,code?`code ${code}`:null,param?`parameter ${param}`:null].filter(Boolean).join('; ');
+ return Object.assign(new Error(`${reason}${diagnostics?` [${diagnostics}]`:''}`),{status:502});
+}
 export async function structureReceipt(text,{apiKey,model='gpt-4.1-mini',fetchImpl=fetch}={}){
  if(typeof text!=='string'||!text.trim()||text.length>30000)throw Error('Provide receipt text under 30,000 characters.');
  if(!apiKey)throw Object.assign(new Error('AI extraction needs OPENAI_API_KEY in your local .env. Local receipt review is still available.'),{status:503});
  const lines=text.split(/\r?\n/).map(line=>line.replace(/\s+/g,' ').trim()).filter(Boolean);
  let response;try{response=await fetchImpl('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${apiKey}`,'Content-Type':'application/json'},signal:AbortSignal.timeout(45000),body:JSON.stringify({model,store:false,instructions,input:JSON.stringify(lines.map((text,line)=>({line,text}))),max_output_tokens:7000,text:{format:{type:'json_schema',name:'receipt_purchase_details',strict:true,schema:RECEIPT_SCHEMA}}})});}catch{throw Error('AI receipt service could not be reached. Try again or use local review.');}
- if(!response.ok)throw Error('AI extraction request failed. Check the OpenAI API key, model access and API credits.');
+ if(!response.ok)throw await receiptProviderError(response);
  let payload;try{payload=await response.json();}catch{throw Error('AI returned an unreadable response. Local review is still available.');}
  if(payload.status!=='completed')throw Error('AI extraction did not complete. Try a shorter receipt or review locally.');
  if(!Array.isArray(payload.output))throw Error('AI returned an unreadable response. Local review is still available.');

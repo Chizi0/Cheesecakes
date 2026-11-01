@@ -55,3 +55,20 @@ test('AI setup or provider errors preserve local review instead of silently pret
  const path=`/api/receipts/${draft.draftId}`;const response=await post(path+'/structure',{text,consent:true});assert.equal(response.status,503);assert.equal(aiCalls(),0);
  const local=await post(path+'/parse',{text:'Wine blouse $45.00'});assert.equal(local.status,200);assert.equal(local.data.rows[0].name,'Wine blouse');
 },{key:''}));
+
+test('provider failures distinguish credentials, quota, rate, model and request schema without leaking provider text',async()=>{
+ const {receiptProviderError}=await import('./receipt-ai.mjs');
+ const cases=[
+  [401,'invalid_api_key','invalid_request_error',/rejected the API key/],
+  [429,'insufficient_quota','insufficient_quota',/quota or billing/],
+  [429,'rate_limit_exceeded','rate_limit_error',/rate-limited/],
+  [404,'model_not_found','invalid_request_error',/configured receipt model/],
+  [403,'permission_denied','permission_error',/project permissions/],
+  [400,'invalid_json_schema','invalid_request_error',/request format/],
+  [503,null,null,/temporary service error/],
+ ];
+ for(const [status,code,type,pattern] of cases){const error=await receiptProviderError({status,json:async()=>({error:{code,type,param:'text.format.schema',message:'Private receipt details and sk-secret-key-value must never show'}})});assert.match(error.message,pattern);assert.match(error.message,new RegExp(`HTTP ${status}`));assert.ok(!error.message.includes('Private'));assert.ok(!error.message.includes('sk-secret'));}
+ const schema=await receiptProviderError({status:400,json:async()=>({error:{code:'invalid_json_schema',message:"'minimum' is not permitted."}})});assert.match(schema.message,/Unsupported schema keyword: minimum/);
+ const unknown=await receiptProviderError({status:502,json:async()=>({error:{code:'sk-secret-value',param:'private-receipt-text'}})});assert.ok(!unknown.message.includes('sk-secret'));assert.ok(!unknown.message.includes('private-receipt'));
+ const invalid=await receiptProviderError({status:500,json:async()=>{throw Error('HTML response');}});assert.match(invalid.message,/HTTP 500/);
+});
