@@ -1,0 +1,12 @@
+<div id="sd-queue">
+<style>
+#sd-queue{color-scheme:light dark;font-family:system-ui,sans-serif;color:light-dark(#243247,#e6eaf2);background:light-dark(#eef2f7,#121923);padding:24px;border-radius:16px}#sd-queue *{box-sizing:border-box}#sd-queue h2{margin:6px 0 12px;font-size:23px}#sd-queue p{line-height:1.5}#sd-queue .sd-kicker{font-size:12px;letter-spacing:.1em}#sd-queue .sd-rule{font-size:13px;color:light-dark(#526278,#b4c0d2)}#sd-queue label{display:grid;gap:8px;font-size:13px}#sd-queue .sd-controls{display:flex;flex-wrap:wrap;gap:18px;margin:22px 0}#sd-queue .sd-controls label{flex:1;min-width:180px}#sd-queue input,#sd-queue select{font:inherit;font-size:16px;min-height:44px;padding:10px;border:1px solid light-dark(#aab8cb,#65748b);border-radius:7px;color:inherit;background:light-dark(#fff,#1e2938);width:100%}#sd-queue ol{list-style:none;margin:0;padding:0;display:grid;gap:12px}#sd-queue li{padding:18px;border-radius:10px;background:light-dark(#fff,#1e2938);border:1px solid light-dark(#d6dfeb,#40506a)}#sd-queue .sd-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}#sd-queue .sd-tag{padding:5px 9px;border-radius:5px;font-size:12px;background:light-dark(#fbe5e4,#562b32);color:light-dark(#8f2427,#ffc6c8)}#sd-queue .sd-tag[data-priority="High"]{background:light-dark(#fff0d1,#4c3d22);color:light-dark(#805214,#ffdda1)}#sd-queue .sd-title{font-weight:600;margin:12px 0 4px}#sd-queue .sd-meta{font-size:13px;color:light-dark(#526278,#b4c0d2)}#sd-queue .sd-error{color:light-dark(#a82424,#ffb4b4)}#sd-queue [hidden]{display:none}@media(max-width:420px){#sd-queue{padding:14px}}
+</style>
+<p class="sd-kicker">SIGNAL DESK / SAMPLE CHECKOUT QUEUE</p>
+<h2>What needs attention first?</h2>
+<p class="sd-rule">Priority → customers affected → oldest arrival</p>
+<div class="sd-controls"><label>Ticket SD-1042 · customers affected<input data-role="count" type="number" min="1" step="1" value="2" required></label><label>Ticket SD-1042 · payment link<select data-role="workaround"><option value="unavailable">Confirmed unavailable</option><option value="working">Confirmed working</option><option value="unknown">Unknown</option></select></label></div>
+<p data-role="error" role="alert" class="sd-error" hidden></p>
+<div data-role="results" aria-live="polite"><p data-role="summary" class="sd-meta"></p><ol data-role="list" aria-label="Tickets in suggested priority order"></ol></div>
+<p class="sd-rule">Synthetic tickets · Rule-based suggestions · Ages are fixed for this exercise</p>
+</div>
