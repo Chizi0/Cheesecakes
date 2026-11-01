@@ -1,47 +1,84 @@
-# ZIALA: closet-to-outfit prototype
+# ZIALA: closet uploads, styling rules, and shopping search
 
-A guided, independent implementation of a small closet-to-outfit flow using sample items. GitHub source only.
+A local development prototype with persisted clothing-photo uploads and a server-side shopping search adapter. GitHub source only; no hosted Site. This is not a production account-based application.
 
-## First approved rule
+## Run the integrated app
 
-Wear-now suggestions exclude items in the laundry and explain why. Exclusion applies to recommendation eligibility; the item remains in the closet. Confirmed-ready items qualify for later styling checks. Missing or unrecognized availability requires confirmation rather than assuming readiness.
+Requires Node.js 22+ and npm.
 
-`availability.mjs` implements this rule. The interface now shows a sample closet with availability controls and laundry reminders. Outfit selection, closet entry, and images are not implemented yet. No live AI or integrations are connected.
+```sh
+cd projects/ziala
+npm install
+cp .env.example .env
+npm start
+```
 
-From the repository root, run `node --test projects/ziala/*.test.mjs` with Node.js 18+.
+Open http://127.0.0.1:3100. The server binds only to loopback. `ZIALA_PORT` can change the port.
 
-## Laundry reminders
+Uploads work without a shopping key. To enable real product searches, put your own SerpApi key in the ignored `.env` file as `SERPAPI_API_KEY=...`, then restart the server. Never paste keys into the UI, commit them, or share them in chat. Searches use the configured provider account and its quota. No provider account is created automatically.
 
-`laundry.mjs` checks tops and bottoms independently. A category triggers an in-app reminder when fewer than two items are confirmed ready and at least one item is in the laundry. Two ready items suppress it; a small closet without laundry does not trigger it. Unknown states do not count as ready. Other clothing categories are outside this initial rule.
+## Clothing uploads and persistence
 
-The function returns reminder records with stable category IDs and counts. It does not send notifications, schedule reminders, or change clothing status. Mark clean and Move to laundry controls recalculate reminders in the interface. Persistence and outfit integration are not implemented yet. Ready counts reflect the whole category, not suitability for an occasion.
+- Upload one JPEG, PNG, or WebP at a time, up to 5 MB and 30 megapixels. Animated images and other formats are rejected.
+- The server decodes the actual image, applies orientation, resizes to a maximum of 1600 × 1600, re-encodes as JPEG, and strips source metadata. Transparent images are flattened on white.
+- Confirm name, category, ready/laundry state, and occasion tags. Tags are manual; no image-recognition model is connected.
+- Metadata and normalized photos are saved under ignored `.ziala-data/` on the server computer, not in GitHub. `ZIALA_DATA_DIR` can override this directory.
+- Refreshing or restarting the server retains saved items and ready/laundry changes. Start with four clearly labeled sample pieces; uploading or updating an item saves the current closet.
+- Photos and tags in the integrated app feed the outfit-completeness checks. There is no background removal, image segmentation, bulk upload, account sync, deletion UI, or user authentication yet.
 
-## Closet walkthrough
+## Styling rules
 
-Run `python3 -m http.server 8000` from this folder and open http://localhost:8000. Start with one ready top and two ready bottoms. Mark the wine satin blouse clean to clear the top reminder. Move one ready bottom to laundry to trigger the bottom reminder. Reset restores sample items. This is browser-local state; refresh discards edits.
+Wear-now suggestions exclude laundry items with a reason. Unknown readiness requires confirmation.
 
-## Chosen-time snooze
+A complete closet outfit is either top + bottom + shoes + bag, or dress + shoes + bag. Bag is mandatory. Every selected piece must be ready and tagged for the requested occasion. The selector picks one candidate per category by ID for repeatable behavior, not visual styling quality. Tags, color harmony, fit, and compatibility are not inferred by AI.
 
-The card provides a local date/time picker for each reminder. `snooze.mjs` requires a future timestamp and hides only that category until the selected time. On expiry, the closet is evaluated again; resolved laundry does not produce a reminder. Show reminder now cancels a snooze. The demo clock starts at the browser current time and advances only through the 30-minute demo button. Refresh/reset clears snoozes. This is an in-app prototype, not a background scheduler, push notification, or external automation. Local times are converted to timestamp instants for comparison.
+A suitable ready closet outfit takes precedence over shopping. Daily wear may show a ready alternative with an explicit occasion-tag compromise. This alternative checks completeness but does not yet rank styling quality.
 
-## Outfit fallback policy
+When there is no suitable ready outfit:
 
-`outfit-policy.mjs` prefers a suitable ready closet outfit. Daily wear may offer a ready alternative with an explicit explanation of the compromise. Occasions keep suitability as a requirement. When no suitable ready outfit exists, shopping is offered only for occasions at least seven calendar days away. For occasions fewer than seven days away, the fallback is suitable nearby in-store buying options rather than an unsuitable closet outfit.
+- Occasions at least seven calendar days away route toward delivery candidates; confirmed estimates must be strictly before the occasion to qualify under `reviewShoppingOptions`.
+- Earlier occasions route toward nearby in-store candidates; suitability, nearby location, stock, and selected size must be confirmed to qualify under `reviewStoreOptions`.
+- Unknown, same-day, or late delivery does not qualify as timely. Unknown size inventory does not qualify. Size systems are not silently converted.
 
-Shopping review requires confirmed occasion suitability and a supplied estimated delivery date strictly before the occasion. Missing, same-day, or late delivery does not qualify. Dates are displayed as estimates. These are policy helpers only: closet suitability detection, alternative ranking, real product retrieval, delivery lookup, and outfit UI are not implemented yet. No estimates are invented and no purchases are made.
+## Shopping integration: what is connected
 
-`reviewStoreOptions` requires supplied confirmation of occasion suitability, nearby location, and in-store stock. Unknown stock or location does not count as available. Eligible options advise checking opening hours and reconfirming stock before visiting. No real stores, stock, opening hours, location permissions, reservations, or purchases are connected. The nearby radius will be defined in a later step. Size-specific inventory is a supplied input for now.
+`shopping.mjs` calls SerpApi's Google Shopping endpoint from the server. The browser sends a clothing category, occasion, size, optional city, and optional maximum price to `/api/shopping/search`. Search terms, size, and city are transmitted to SerpApi when the user submits. Images are not sent to the shopping provider.
 
-In-store review requires a user-selected size and a matching entry in the store option’s `availableSizes` list. Missing size inventory stays excluded. Case/whitespace are normalized, but country/brand size systems are not converted. A confirmed general stock flag alone is insufficient. Real store-size inventory retrieval is not connected.
+Search results include supplied product title, seller, price, product link, thumbnail, and raw delivery text. API keys remain server-side. Unsafe links and known over-budget amounts are excluded; results without a known price are labeled accordingly. Provider errors return an error rather than substituting fictional results.
 
-## Styling-policy preview
+**Discovery is not verification.** Search results do not establish size-specific store stock, actual nearby inventory, occasion suitability, or an arrival date. Those fields remain explicitly unverified/null. “Free shipping” is not converted into a delivery date. The UI labels results as candidates and links to the product page for retailer checks; it does not mark them as satisfying our strict eligibility rules.
 
-Open /policy.html on the local server to test fallback behavior. The preview uses a browser-local today date, editable sample closet records, sample delivery dates, and fictional store inventory. Seven or more days selects delivery review; fewer selects in-store review. Changing size affects the store-size eligibility check. Marking the required pieces ready returns to the closet path. Daily wear may offer a ready alternative with a compromise explanation. This tests policy routing, not actual outfit generation or live shopping.
+Current source docs:
+- https://serpapi.com/google-shopping-api
+- https://serpapi.com/shopping-results
 
-## Complete closet outfit rules
+Live retailer inventory, geospatial nearby filtering, size-specific delivery estimates, retailer detail APIs, purchasing, and verified store-visit options remain unconnected. The city influences provider search origin; it does not prove proximity. No precise-location permission is requested. The missing-category selection is a simple starting suggestion, not an optimized shopping plan.
 
-`outfits.mjs` requires either top + bottom + shoes + bag, or dress + shoes + bag. Bag is mandatory. Every selected item must be confirmed ready and carry the requested occasion tag. Results include missing categories and per-item exclusion reasons. One complete pattern is sufficient; incomplete patterns are not labeled complete.
+## API
 
-This first selector chooses one candidate per category by ID for repeatable tests, not fashion ranking. Occasion tags are supplied metadata; color harmony, fit, weather, and visual compatibility are not checked. The policy preview now uses this helper against editable sample closet records. Daily alternative ranking remains future work.
+- `GET /api/health`: reports whether shopping credentials are configured; never returns the key.
+- `GET /api/closet`: saved closet records.
+- `POST /api/closet`: JSON metadata plus `imageBase64`, validated and saved as a normalized image.
+- `PATCH /api/closet/:id`: persist a ready/laundry change.
+- `POST /api/shopping/search`: validated search request, server-side provider call.
+- `GET /uploads/:id.jpg`: normalized uploaded image.
 
-In the current /policy.html sample, occasion means dinner. Move the structured bag to laundry to make both patterns incomplete. Mark it clean to restore closet completeness. The daily alternative path checks ready-category completeness without the requested tag and explicitly labels the compromise; it does not yet rank alternatives by styling quality. Buying candidates remain illustrative and are not matched to the exact missing category. The closet/snooze page and outfit-policy page currently use separate sample state.
+This local server rejects foreign origins and unrecognized hosts, limits request size, serializes metadata writes, and never serves `.env` or backend modules. It has no authentication, multi-process transactional storage, or production rate limiting. Do not expose it on a public interface. Back up the local data directory yourself if you need durable recovery.
+
+## Guided previews retained
+
+- `/index.html`: original sample laundry closet, with mark-clean controls and category reminders.
+- `/policy.html`: editable sample closet, completeness, and fictional shopping candidates for rule testing.
+- `/app.html` or `/`: integrated uploaded closet and actual shopping adapter.
+
+The older previews use separate in-memory sample state and do not modify the saved uploaded closet. For them alone, a static server still works: `python3 -m http.server 8000`.
+
+Laundry reminders check tops and bottoms separately: fewer than two confirmed-ready items plus at least one item in laundry triggers a category reminder. The integrated app displays these counts and reminders. Chosen-time snooze is currently in the older `/index.html` preview only: its date/time picker hides a category reminder until the selected time, then rechecks the closet. The demo clock advances through its 30-minute button; refresh clears snoozes. There are no actual background notifications or recurring automations.
+
+## Validation
+
+```sh
+npm test
+```
+
+Tests cover the original rules plus real HTTP upload/metadata/image persistence across a server restart, invalid image rejection with no data changes, status updates, cross-origin rejection, and shopping request/response normalization. Shopping tests inject provider fixtures; they are not proof of a live credentialed search. No real provider call is possible without a supplied key. Browser verification status is recorded with the pull request.

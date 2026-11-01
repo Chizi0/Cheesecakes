@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZIALA · Your closet</title><link rel="stylesheet" href="app.css"></head>
+<body><main><header><strong>ZIALA</strong><nav><a href="#closet">Closet</a><a href="#style">Style</a><a href="#shopping">Shopping</a></nav></header>
+<section class="hero"><p class="eyebrow">YOUR CLOTHES. MORE POSSIBILITIES.</p><h1>A closet you can actually use.</h1><p>Add a piece, tell us when you wear it, and find what’s missing.</p></section>
+<p id="message" role="status" aria-live="polite"></p>
+<section class="panel"><h2>Add to your closet</h2><form id="upload-form"><div class="fields">
+<label>Clothing photo<input name="photo" type="file" accept="image/jpeg,image/png,image/webp" required><span>JPEG, PNG or WebP · Up to 5 MB</span></label>
+<label>Item name<input name="name" maxlength="100" placeholder="Wine satin blouse" required></label>
+<label>Category<select name="category"><option value="top">Top</option><option value="bottom">Bottom</option><option value="dress">Dress</option><option value="shoes">Shoes</option><option value="bag">Bag</option></select></label>
+<label>Availability<select name="availability"><option value="ready">Ready to wear</option><option value="laundry">In laundry</option></select></label>
+<label>Occasion tags<input name="occasions" placeholder="daily, dinner, wedding" required><span>Confirm the tags yourself; automatic image tagging is not connected yet.</span></label>
+</div><button type="submit">Save item</button></form></section>
+<section id="closet"><div class="section-title"><h2>Your closet</h2><span id="counts"></span></div><div id="laundry" aria-live="polite"></div><div id="items" class="items"></div></section>
+<section id="style" class="panel"><h2>Plan a look</h2><div class="fields">
+<label>Request<select id="mode"><option value="occasion">Occasion</option><option value="daily">Daily wear</option></select></label>
+<label>Occasion tag<select id="occasion"><option value="dinner">Dinner</option><option value="wedding">Wedding</option><option value="daily">Daily</option></select></label>
+<label>Occasion date<input id="date" type="date"></label>
+</div><div id="outfits" aria-live="polite"></div></section>
+<section id="shopping" class="panel"><h2>Find the missing piece</h2><p id="shopping-status"></p><p class="muted">Search candidates need retailer verification for your size, local stock, and delivery date.</p>
+<form id="shopping-form"><div class="fields"><label>Missing category<select name="category" id="shopping-category"><option value="bag">Bag</option><option value="shoes">Shoes</option><option value="top">Top</option><option value="bottom">Bottom</option><option value="dress">Dress</option></select></label><label>Selected size<input name="size" required placeholder="M, US 8, or One size" maxlength="30"></label><label>City (optional)<input name="location" placeholder="Linden, New Jersey, United States" maxlength="100"><span>Search terms, size and city are sent to the shopping provider when you search.</span></label><label>Maximum price, USD (optional)<input name="budget" type="number" min="0.01" step="0.01"></label></div><button type="submit">Search products</button></form><div id="products" class="items" aria-live="polite"></div></section>
+<footer>Local development app · Closet photos and changes are stored on this computer · No account or cloud sync</footer></main><script type="module" src="app.mjs"></script></body></html>
