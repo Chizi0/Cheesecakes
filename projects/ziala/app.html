@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZIALA · Your closet</title><link rel="stylesheet" href="app.css"></head>
-<body><main><header><strong>ZIALA</strong><nav><a href="#closet">Closet</a><a href="#receipts">Receipts</a><a href="#style">Style</a><a href="#shopping">Shopping</a></nav></header>
+<body><main><header><strong>ZIALA</strong><nav><a href="#closet">Closet</a><a href="#receipts">Receipts</a><a href="#calendar">Calendar</a><a href="#style">Style</a><a href="#shopping">Shopping</a></nav></header>
 <section class="hero"><p class="eyebrow">YOUR CLOTHES. MORE POSSIBILITIES.</p><h1>A closet you can actually use.</h1><p>Add a piece, tell us when you wear it, and find what’s missing.</p></section>
 <p id="message" role="status" aria-live="polite"></p>
 <section class="panel"><h2>Add to your closet</h2><form id="upload-form"><div class="fields">
@@ -12,7 +12,8 @@
 </div><button type="submit">Save item</button></form></section>
 <section id="receipts" class="panel"><h2>Add purchases from a receipt</h2><p id="receipt-ai-status" class="muted"></p><p>Upload a receipt, review the item details, and optionally find matching product photos.</p><form id="receipt-upload"><label>Receipt file<input name="receipt" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain" required><span>JPEG, PNG, WebP, text, or PDF with selectable text. PDF/text up to 5 MB; photos up to 20 MB are resized. Scanned PDFs: upload a photo instead.</span></label><button type="submit">Read receipt</button></form><p class="muted">Initial receipt reading stays on this computer. Optional AI extraction sends reviewed receipt text to OpenAI. Product searches send only reviewed retailer/item/SKU/color/size details to SerpApi; order numbers stay out of searches. Receipt files and full text are not saved. Reviews expire after 20 minutes or an app restart.</p><div id="receipt-review" aria-live="polite"></div></section>
 <section id="closet"><div class="section-title"><h2>Your closet</h2><span id="counts"></span></div><div id="laundry" aria-live="polite"></div><div id="items" class="items"></div></section>
-<section id="style" class="panel"><h2>Plan a look</h2><div class="fields">
+<section id="calendar" class="panel"><h2>Dress for what’s next</h2><p>Choose an upcoming Google Calendar event and confirm its occasion to plan an outfit.</p><p id="calendar-status" role="status"></p><div class="calendar-actions"><button id="calendar-connect" type="button">Connect Google Calendar</button><button id="calendar-refresh" type="button" hidden>Refresh events</button><button id="calendar-disconnect" type="button" hidden>Disconnect Calendar</button></div><p class="muted">Read-only access to your primary calendar’s events. Events stay out of AI and shopping searches. Refresh to get changes; no background calendar sync.</p><div id="calendar-events" class="items"></div></section>
+<section id="style" class="panel"><h2>Plan a look</h2><p id="calendar-selection" hidden></p><div class="fields">
 <label>Request<select id="mode"><option value="occasion">Occasion</option><option value="daily">Daily wear</option></select></label>
 <label>Occasion tag<select id="occasion"><option value="dinner">Dinner</option><option value="wedding">Wedding</option><option value="daily">Daily</option></select></label>
 <label>Occasion date<input id="date" type="date"></label>

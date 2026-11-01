@@ -90,7 +90,7 @@ The phone-preview fix uses a file data URL rather than a blob URL for image load
 
 ## Remaining integrations
 
-Gmail receipt import and calendar event import are not implemented yet. They remain separate follow-up work. Connecting Gmail or Calendar to ChatGPT does not connect them to this app.
+Gmail receipt import remains future work. Google Calendar connection code is now included below; real Google OAuth setup and the creator’s live Mac check are pending. Connecting Gmail or Calendar to ChatGPT does not connect them to this app.
 
 ## Receipt uploads and purchased-item review
 
@@ -106,7 +106,7 @@ Receipt files and full extracted text are not written to disk. Draft line sugges
 
 Endpoints: `POST /api/receipts/extract`, `POST /api/receipts/:draftId/parse`, `POST /api/receipts/:draftId/search`, and `POST /api/receipts/:draftId/commit`. Receipt backend modules are not served as static files. This remains a loopback-only development server, without account authentication or cloud sync.
 
-Validation: 72 tests pass, including real local OCR, PDF/text extraction, selection-only saves, quantity handling, persistence, exact-file duplicate checks, review/match confirmation, invalid review rejection, backend-file protection and origin checks. Receipt tests also passed under Node 22.11.0, matching the creator’s Mac. A DOM interaction check exercised upload → review → candidate confirmation → save against the actual local HTTP server with fixture shopping data. Visual browser review and live receipt-product search on the creator’s Mac are pending. Existing general live shopping and clothing uploads were previously confirmed by the creator. No real receipt or provider credential is used by automated tests.
+Validation: 78 tests pass, including real local OCR, PDF/text extraction, selection-only saves, quantity handling, persistence, exact-file duplicate checks, review/match confirmation, invalid review rejection, backend-file protection and origin checks. Receipt tests also passed under Node 22.11.0, matching the creator’s Mac. A DOM interaction check exercised upload → review → candidate confirmation → save against the actual local HTTP server with fixture shopping data. Visual browser review and live receipt-product search on the creator’s Mac are pending. Existing general live shopping and clothing uploads were previously confirmed by the creator. No real receipt or provider credential is used by automated tests.
 
 Implementation references: https://github.com/naptha/tesseract.js/blob/master/docs/api.md and https://github.com/mozilla/pdf.js/blob/master/examples/node/getinfo.mjs.
 
@@ -122,8 +122,33 @@ The AI proposes retailer, private order number and printed purchase date, plus i
 
 Search queries are built from allowlisted reviewed product fields. Order number/date are not included. A known order identifier accidentally pasted into a product field is blocked before SerpApi search. Candidate confirmation is tied to the exact reviewed retailer/name/category/SKU/color/size; editing those details requires a fresh search. Search queries bias results through retailer/style/color terms but do not verify an exact product, retailer domain, inventory, or variant. The user still confirms the match. Saved items retain their corrected purchase metadata locally; order information is not sent to SerpApi. Exact-file/line duplicate detection is still limited when layout/text or parsing modes change source-line identity.
 
-Validation adds schema/request checks, unsupported-evidence handling, null/unknown fields, incomplete/refused/malformed output, missing credentials, consent, private identifier exclusion, corrected search queries, stale-match rejection, and reviewed metadata persistence. Provider calls in tests are injected fixtures, not evidence of live AI quality. The creator’s Mac/live AI check is pending. Gmail and calendar integration remain follow-up work.
+Validation adds schema/request checks, unsupported-evidence handling, null/unknown fields, incomplete/refused/malformed output, missing credentials, consent, private identifier exclusion, corrected search queries, stale-match rejection, and reviewed metadata persistence. Provider calls in tests are injected fixtures, not evidence of live AI quality. The creator’s Mac/live AI check is pending. Gmail remains follow-up work; Google Calendar code is now included with live setup pending.
 
 Official API references: https://developers.openai.com/api/docs/guides/structured-outputs and https://developers.openai.com/api/docs/guides/your-data.
 
 AI failure diagnostics: provider HTTP status and allowlisted error codes now distinguish authentication, quota/billing, rate limiting, model access, request-format/schema and temporary service failures. The error appears next to the AI button as well as in the main status. Provider messages, keys and receipt text are not echoed; only recognized schema-keyword hints are extracted from provider messages. A configured key is labeled configured, not validated. These diagnostics do not establish the cause of the creator’s current failed request; the next Mac retry is needed.
+
+## Google Calendar connection (local prototype)
+
+The **Calendar** section connects directly to Google using a Desktop OAuth client, read-only event access, browser-bound one-time state and PKCE. This connection belongs to ZIALA, separate from ChatGPT’s Google Calendar plugin. It requires no OpenAI API calls/credits. Live creator authorization is still pending; tests use provider fixtures.
+
+Setup for your own Mac:
+
+1. Create/select a Google Cloud project and enable **Google Calendar API**.
+2. Configure Google Auth platform branding/audience. For a personal Gmail test account use **External**, keep the app in Testing, and add your own Google email under Test users. In Data Access include `https://www.googleapis.com/auth/calendar.events.readonly`.
+3. Create an OAuth client with application type **Desktop app**, e.g. “ZIALA local Mac”. This is a local prototype; do not use this Desktop setup for a future public hosted service.
+4. Put its Client ID and Client secret privately into ignored `.env` as `GOOGLE_CALENDAR_CLIENT_ID=...` and `GOOGLE_CALENDAR_CLIENT_SECRET=...`. Keep the existing SerpApi/OpenAI/port settings. Do not commit downloaded credential JSON or paste secrets into chat. No credential JSON file is needed in the repository.
+5. Restart `npm start`, open `http://127.0.0.1:3100` (or the configured port), and click **Connect Google Calendar**. Use 127.0.0.1 for sign-in, not localhost, so the callback cookie matches. The Desktop loopback callback is `/api/calendar/callback` on the running app’s origin. Choose your account and review/approve the read-only permission. If Google blocks the app, check the test-user, client type, enabled API and scope setup; do not broaden permissions to work around it.
+6. Choose an event, explicitly confirm Dinner/Wedding/Daily, and plan an outfit. Calendar titles do not infer dress code or an occasion tag. The event date populates the existing planner; normal closet-first/shopping timing rules apply. Events beginning on an earlier date need a manually chosen future date or another event.
+
+The app reads the primary calendar for a rolling 90-day window, expanding recurring events and reading at most five pages/500 entries. A truncation notice appears if more pages remain. Cancelled and self-declined entries are excluded. All-day dates remain date-only; timed events use their event/calendar timezone to select the date. Titles/dates are displayed locally, but event descriptions, other guests’ contact details and locations are not requested. Event titles/details never enter receipt AI or shopping queries; styling uses the chosen date and your explicit occasion tag. Refresh requests current events and clears a selected event if its displayed identity/date changed or it disappeared. Manual planner edits stop showing the calendar context. There is no background sync, secondary-calendar selector, event creation/editing, email integration, or calendar AI interpretation. Event lists/planner selections are not persisted.
+
+Access and refresh tokens are stored in ignored `.ziala-data/google-calendar.json`, written atomically with mode 0600. They are not returned to the browser or served as static files. This is local file-permission protection, not encryption. The app refreshes expired access on demand, validates callback state/cookie/expiry and PKCE, rejects replay/foreign origins, checks granted scope, and keeps secrets out of error messages. This remains a single-user loopback prototype without application login or OS keychain integration. Do not expose this server publicly or share its data directory.
+
+**Disconnect Calendar** deletes local tokens and pending sign-ins and attempts Google token revocation. If revocation cannot be confirmed, the UI tells you to remove the app under your Google Account connections too. Testing-mode OAuth refresh grants can expire after seven days; Google revocation/account policies may also require reconnection. Removing a connection does not alter your calendar events.
+
+Routes: `GET /api/calendar/status`, `POST /api/calendar/connect`, `GET /api/calendar/callback`, `GET /api/calendar/events`, `POST /api/calendar/disconnect`. Browser writes keep the existing JSON/origin checks. No new npm dependency is required.
+
+Validation: 78 automated tests pass, including real local HTTP OAuth fixture exchanges, browser state/cookie/PKCE/replay/expiry checks, granted scope, token persistence and 0600 mode, refresh, paginated event retrieval, calendar-timezone/date-only handling, disconnect when revocation fails, missing setup and foreign-origin rejection. A DOM check exercised event loading, mandatory occasion confirmation, date handoff, refresh removal and disconnect. Google OAuth and real event access still require creator setup and a guided Mac check. Receipt AI remains pending available API credits; Gmail remains unimplemented.
+
+References: https://developers.google.com/identity/protocols/oauth2/native-app, https://developers.google.com/workspace/calendar/api/v3/reference/events/list, https://developers.google.com/workspace/calendar/api/quickstart/nodejs, and https://developers.google.com/workspace/guides/configure-oauth-consent.

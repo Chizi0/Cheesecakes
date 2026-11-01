@@ -1,3 +1,4 @@
+import { setupCalendar } from './calendar-ui.mjs';
 import { setupReceipts } from './receipt-ui.mjs';
 import { prepareClothingPhoto } from './client-image.mjs';
 import { reviewCloset } from './availability.mjs';
@@ -79,7 +80,14 @@ $('shopping-form').onsubmit=async event=>{
  message(result.products.length?result.notice:'No search candidates returned. Try different terms.');
  }catch(error){message(error.message);}finally{button.disabled=false;}
 };
-for(const id of ['mode','occasion','date'])$(id).onchange=renderStyle;
+for(const id of ['mode','occasion','date'])$(id).onchange=()=>{$('calendar-selection').hidden=true;renderStyle();};
 try{items=(await api('/api/closet')).items;await refreshLaundry();render();const health=await api('/api/health');if(!health.shoppingConfigured)message('Closet uploads are ready. Shopping search needs a server API key; setup is in the README.');}catch(error){message(`Start the ZIALA server to load your closet: ${error.message}`);}
 
 setupReceipts({api,message,onImported:async()=>{items=(await api('/api/closet')).items;await refreshLaundry();render();}});
+
+setupCalendar({api,onSelect:event=>{
+ if(!event){$('calendar-selection').hidden=true;return;}
+ if(event.date<today()){message('This event began on an earlier date. Choose a future event or plan a date manually.');return;}
+ $('mode').value='occasion';$('occasion').value=event.occasion;$('date').value=event.date;
+ $('calendar-selection').textContent=`Planning for ${event.title} · ${event.date} · ${event.timeZone}`;$('calendar-selection').hidden=false;renderStyle();
+}});
