@@ -90,4 +90,22 @@ The phone-preview fix uses a file data URL rather than a blob URL for image load
 
 ## Remaining integrations
 
-Receipt extraction and review before saving closet items, Gmail receipt import, and calendar event import are not implemented yet. They remain separate follow-up work. Connecting Gmail or Calendar to ChatGPT does not connect them to this app.
+Gmail receipt import and calendar event import are not implemented yet. They remain separate follow-up work. Connecting Gmail or Calendar to ChatGPT does not connect them to this app.
+
+## Receipt uploads and purchased-item review
+
+Use **Receipts** in the integrated app. Upload a JPEG/PNG/WebP photo, UTF-8 text file, or unlocked PDF with selectable text. Photos use the existing browser resize path (20 MB source limit). Server receipt files are limited to 5 MB; PDF extraction is limited to five pages and all text to 30,000 characters. English image OCR uses Tesseract.js with bundled English language data from npm; extraction does not send receipt contents to a service. Scanned PDFs are not rendered/OCRed: upload a clear photo instead. Photos are resized, so tiny or blurred text may need a cropped clearer image.
+
+1. Read the receipt. Nothing is saved to the closet yet.
+2. Inspect the extracted text and priced-line suggestions. Names, categories and quantities are suggestions. Totals, tax, shipping, payment and obvious contact lines are filtered; unusual layouts can still be wrong. Edit raw text and reparse when needed. Extraction is heuristic, not a purchase-verification model.
+3. Select clothing items you actually purchased. Correct the name/category/quantity, confirm ready/laundry status, and add occasion tags. Unknown categories and availability require an explicit choice. Quantities of 1–10 create separate physical closet records, up to 50 records per save. Printed receipt amounts are review context, not inferred unit prices or cost-per-wear data.
+4. Optionally enter the size and choose **Find a matching product**. Only that reviewed name, category and size are sent to SerpApi. Candidate products show seller, image and link. Confirm a candidate yourself; exact identity, size and color are not automatically verified. A product link/photo can be attached only from that review’s returned candidates. You may save without a product image. Retailer image URLs are referenced, not downloaded or owned by ZIALA, and may stop working. To use your own photo instead, use the existing manual clothing upload; photo replacement on receipt-created records is future work.
+5. Confirm review and save. Validation runs for the whole selected set before any item is written. The existing saved closet remains compatible. Repeated imports of the same unchanged receipt bytes and line ID are skipped, even after restart. This is not semantic duplicate detection across different photos, edited/reordered receipt text, or alternate copies of the same purchase.
+
+Receipt files and full extracted text are not written to disk. Draft line suggestions and product candidates live in server memory for 20 minutes, with at most ten open reviews and one extraction at a time. Restarting the app clears unfinished drafts. Saved closet items retain reviewed fields and a receipt fingerprint/line/unit reference for duplicate checks, plus any confirmed product reference. Sensitive lines are never deliberately sent in product searches; the editable item-name field still requires your review before searching. Loading candidate images contacts the image hosts.
+
+Endpoints: `POST /api/receipts/extract`, `POST /api/receipts/:draftId/parse`, `POST /api/receipts/:draftId/search`, and `POST /api/receipts/:draftId/commit`. Receipt backend modules are not served as static files. This remains a loopback-only development server, without account authentication or cloud sync.
+
+Validation: 64 tests pass, including real local OCR, PDF/text extraction, selection-only saves, quantity handling, persistence, exact-file duplicate checks, review/match confirmation, invalid review rejection, backend-file protection and origin checks. Receipt tests also passed under Node 22.11.0, matching the creator’s Mac. A DOM interaction check exercised upload → review → candidate confirmation → save against the actual local HTTP server with fixture shopping data. Visual browser review and live receipt-product search on the creator’s Mac are pending. Existing general live shopping and clothing uploads were previously confirmed by the creator. No real receipt or provider credential is used by automated tests.
+
+Implementation references: https://github.com/naptha/tesseract.js/blob/master/docs/api.md and https://github.com/mozilla/pdf.js/blob/master/examples/node/getinfo.mjs.

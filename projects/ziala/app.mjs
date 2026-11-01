@@ -1,3 +1,4 @@
+import { setupReceipts } from './receipt-ui.mjs';
 import { prepareClothingPhoto } from './client-image.mjs';
 import { reviewCloset } from './availability.mjs';
 import { laundryReminders } from './laundry.mjs';
@@ -79,3 +80,5 @@ $('shopping-form').onsubmit=async event=>{
 };
 for(const id of ['mode','occasion','date'])$(id).onchange=renderStyle;
 try{items=(await api('/api/closet')).items;await refreshLaundry();render();const health=await api('/api/health');if(!health.shoppingConfigured)message('Closet uploads are ready. Shopping search needs a server API key; setup is in the README.');}catch(error){message(`Start the ZIALA server to load your closet: ${error.message}`);}
+
+setupReceipts({api,message,onImported:async()=>{items=(await api('/api/closet')).items;await refreshLaundry();render();}});
