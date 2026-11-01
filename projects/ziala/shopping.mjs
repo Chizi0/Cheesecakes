@@ -7,8 +7,8 @@ export function shoppingRequest(input){
  if(!occasion||!size)throw new Error('Enter an occasion and selected size.');
  const budget=input.budget===''||input.budget==null?null:Number(input.budget);
  if(budget!==null&&(!Number.isFinite(budget)||budget<=0||budget>100000))throw new Error('Enter a valid maximum price.');
- const productName=text(input.productName,100);
- return {category:input.category,occasion,size,location,budget,...(productName?{productName}:{})};
+ const productName=text(input.productName,100),retailer=text(input.retailer,100),sku=text(input.sku,60),color=text(input.color,60);
+ return {category:input.category,occasion,size,location,budget,...(productName?{productName,retailer,sku,color}:{})};
 }
 export function normalizeShoppingResults(payload,request){
  const checkedAt=new Date().toISOString();
@@ -26,7 +26,7 @@ export async function searchShopping(input,{apiKey,fetchImpl=fetch}={}){
  const request=shoppingRequest(input);
  if(!apiKey) {const error=new Error('Shopping search needs SERPAPI_API_KEY in the server environment.');error.status=503;throw error;}
  const url=new URL('https://serpapi.com/search.json');
- url.search=new URLSearchParams({engine:'google_shopping',q:request.productName?`${request.productName} ${request.category} size ${request.size}`:`women ${request.category} ${request.occasion} size ${request.size}`,gl:'us',hl:'en',api_key:apiKey,...(request.location?{location:request.location}:{})});
+ url.search=new URLSearchParams({engine:'google_shopping',q:request.productName?[request.retailer,request.productName,request.sku,request.color,request.category,`size ${request.size}`].filter(Boolean).join(' '):`women ${request.category} ${request.occasion} size ${request.size}`,gl:'us',hl:'en',api_key:apiKey,...(request.location?{location:request.location}:{})});
  let response;try{response=await fetchImpl(url,{signal:AbortSignal.timeout(15000)});}catch{throw new Error('Shopping provider could not be reached. Try again.');}
  if(!response.ok)throw new Error('Shopping provider rejected the request. Check the server key and search quota.');
  const payload=await response.json();if(payload.error)throw new Error('Shopping provider could not complete this search. Check the server key and query.');

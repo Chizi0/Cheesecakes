@@ -52,7 +52,7 @@ test('receipt review saves only approved purchases, preserves across restart and
 test('receipt product matching sends reviewed item terms only and requires explicit candidate confirmation',()=>withServer(async({post,searchURL})=>{
  const draft=(await post('/api/receipts/extract',file(sample+'\ncustomer@example.com'))).data,row=review(draft.rows[0]);
  const result=await post(`/api/receipts/${draft.draftId}/search`,{rowId:row.rowId,name:row.name,category:row.category,size:'M'});assert.equal(result.status,200);assert.match(searchURL().searchParams.get('q'),/Wine satin blouse/);assert.ok(!searchURL().href.includes('customer'));assert.ok(!JSON.stringify(result.data).includes('private-test-key'));
- const body={reviewConfirmed:true,items:[{...row,productId:'p1'}]};assert.equal((await post(`/api/receipts/${draft.draftId}/commit`,body)).status,400);
+ const body={reviewConfirmed:true,items:[{...row,size:'M',productId:'p1'}]};assert.equal((await post(`/api/receipts/${draft.draftId}/commit`,body)).status,400);
  body.items[0].matchConfirmed=true;const saved=await post(`/api/receipts/${draft.draftId}/commit`,body);assert.equal(saved.status,200);assert.equal(saved.data.items[0].productUrl,'https://example.com/blouse');assert.equal(saved.data.items[0].imageUrl,'https://example.com/blouse.jpg');
 }));
 test('invalid receipt review is all-or-nothing and backend modules and foreign origins stay blocked',()=>withServer(async({post,request})=>{

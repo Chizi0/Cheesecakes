@@ -16,6 +16,7 @@ function render(){
  for(const item of reviewCloset(items)){
   const card=el('article',null,'item');if(item.imageUrl){const image=el('img');image.src=item.imageUrl;image.alt=item.name;image.loading='lazy';card.append(image);}
   card.append(el('h3',item.name),el('p',`${item.category} · ${item.occasions?.join(', ')||'No occasion tags'}`),el('p',item.reason));
+  if(item.purchase)card.append(el('p',[item.purchase.retailer,item.purchase.sku?`Style ${item.purchase.sku}`:'',item.purchase.color,item.purchase.size?`Size ${item.purchase.size}`:''].filter(Boolean).join(' · ')));
   const button=el('button',item.availability==='ready'?'Move to laundry':'Mark clean');button.onclick=async()=>{button.disabled=true;try{const data=await api(`/api/closet/${encodeURIComponent(item.id)}`,{method:'PATCH',body:JSON.stringify({availability:item.availability==='ready'?'laundry':'ready'})});items=items.map(existing=>existing.id===item.id?data.item:existing);render();await refreshLaundry();}catch(error){message(error.message);button.disabled=false;}};card.append(button);$('items').append(card);
  }
  renderStyle();
