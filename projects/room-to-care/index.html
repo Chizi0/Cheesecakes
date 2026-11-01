@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Room to Care — readiness and patient queue</title></head><body>
+<div id="rtc-card">
+<style>
+#rtc-card{color-scheme:light dark;font-family:system-ui,sans-serif;padding:24px;border-radius:16px;background:light-dark(#edf4f3,#142220);color:light-dark(#183d37,#e0eeea)}#rtc-card *{box-sizing:border-box}#rtc-card article{padding:24px;border-radius:12px;background:light-dark(#fff,#20332f);border:1px solid light-dark(#cadbd5,#48635a)}#rtc-card .rtc-kicker{font-size:12px;letter-spacing:.1em}#rtc-card h2{font-size:24px;margin:12px 0}#rtc-card p{line-height:1.6}#rtc-card .rtc-status{display:inline-block;padding:7px 12px;border-radius:6px;background:light-dark(#deebe5,#385248);font-weight:600}#rtc-card .rtc-controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}#rtc-card button{font:inherit;min-height:44px;padding:10px 14px;border-radius:7px;border:1px solid light-dark(#9bb6aa,#688c7c);color:inherit;background:light-dark(#f2f7f4,#2b453b)}#rtc-card button:disabled{opacity:.45}#rtc-card .rtc-main{background:light-dark(#204d3d,#c1e4d1);color:light-dark(#fff,#153527)}#rtc-card .rtc-secondary{font-size:13px;color:light-dark(#526d62,#b7ccc0)}#rtc-card .rtc-message{min-height:28px;font-weight:600}#rtc-card [hidden]{display:none}@media(max-width:420px){#rtc-card{padding:14px}#rtc-card article{padding:18px}}
+</style>
+<p class="rtc-kicker">ROOM TO CARE / ROOM READINESS</p>
+<article aria-label="Sample room workflow">
+<h2>Room R-01</h2>
+<p class="rtc-secondary">Simulated time (UTC): <span data-role="clock"></span></p>
+<div class="rtc-controls"><button type="button" data-role="advance">Advance 5 minutes</button></div>
+<div aria-live="polite"><span class="rtc-status" data-role="status">Occupied</span><p data-role="patient"></p><p class="rtc-secondary" data-role="staff"></p></div>
+<p data-role="task" class="rtc-secondary"></p><p data-role="timing" class="rtc-secondary"></p>
+<div class="rtc-controls" aria-label="Room workflow actions"><button type="button" data-action="patient_left">Patient left</button><button type="button" data-action="start_cleaning">Start cleaning</button><button type="button" data-action="confirm_ready">Confirm ready</button></div>
+<div class="rtc-controls"><button type="button" data-role="retry" hidden>Retry cleaner assignment</button><button type="button" data-role="reset">Reset sample</button></div>
+<p class="rtc-message" data-role="message" role="status" aria-live="polite"></p>
+<h3>Waiting patients</h3>
+<p class="rtc-secondary">Staff-selected priority group A · Standard room · Longest waiting first</p>
+<ol data-role="queue" aria-label="Eligible waiting patients"></ol><p data-role="queue-empty" hidden>No eligible patients waiting.</p>
+<h3>Cleaner availability</h3>
+<div data-role="roster"></div>
+<p class="rtc-secondary">Shift: 08:00–16:00 UTC · A break: 12:00–12:15 · B break: 12:15–12:30. Last assigned: A 09:00, B 09:30.</p>
+</article>
+<p class="rtc-secondary">Synthetic data · Cleaning actions use the assigned cleaner’s ID · Break eligibility follows the sample schedule · Changes stay in this preview</p>
+</div>
+<script type="module" src="card.mjs"></script>
+</body></html>
