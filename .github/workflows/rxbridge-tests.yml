@@ -1,0 +1,21 @@
+name: RxBridge prototype tests
+on:
+  pull_request:
+    paths:
+      - 'rxbridge/**'
+      - '.github/workflows/rxbridge-tests.yml'
+  push:
+    branches:
+      - 'feature/rxbridge-medication-journey'
+    paths:
+      - 'rxbridge/**'
+      - '.github/workflows/rxbridge-tests.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node rxbridge/test.cjs
