@@ -8,8 +8,10 @@ const seed=[
 {id:"RX-1001",patient:"Jordan Lee",medication:"Demo Medication A",pharmacy:"Main Street Pharmacy",status:"processing",history:["Prescription received","Pharmacy started processing"],delayReason:""},
 {id:"RX-1002",patient:"Taylor Morgan",medication:"Demo Medication B",pharmacy:"Central Pharmacy",status:"delayed",history:["Prescription received","Pharmacy reported a fulfillment delay"],delayReason:"Stock unavailable (simulation)"}
 ];
+seed.forEach(o=>o.transfer=null);
 let orders=structuredClone(seed);
 let sequence=1003;
+const alternatives=[{id:"north",name:"Northside Pharmacy",pickup:true,delivery:true,stock:"Available (simulated)"},{id:"park",name:"Park Avenue Pharmacy",pickup:true,delivery:false,stock:"Available (simulated)"}];
 const transitions={received:["processing","delayed"],processing:["ready","delayed"],delayed:["processing"],ready:["picked up"],"picked up":[]};
 const labels={received:"Received",processing:"Processing",delayed:"Delayed",ready:"Ready for pickup","picked up":"Picked up"};
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -17,7 +19,7 @@ function createOrder(data){
 const patient=data.patient.trim(),medication=data.medication.trim(),pharmacy=data.pharmacy.trim();
 if(!patient||!medication||!pharmacy)throw Error("All fields are required.");
 if([patient,medication,pharmacy].some(s=>s.length>80))throw Error("Fields must be 80 characters or fewer.");
-const order={id:"RX-"+sequence++,patient,medication,pharmacy,status:"received",history:["Prescriber created a simulated prescription","Prescription received"],delayReason:""};
+const order={id:"RX-"+sequence++,patient,medication,pharmacy,status:"received",history:["Prescriber created a simulated prescription","Prescription received"],delayReason:"",transfer:null};
 orders.unshift(order);return order;
 }
 function advanceOrder(id,next,reason=""){
@@ -30,11 +32,34 @@ o.delayReason=next==="delayed"?reason.trim():"";
 o.history.push(next==="delayed"?"Pharmacy reported delay: "+o.delayReason:"Status updated to "+labels[next]);
 return o;
 }
+function requestTransfer(id,pharmacyId,method){
+const o=orders.find(x=>x.id===id),p=alternatives.find(x=>x.id===pharmacyId);
+if(!o||o.status!=="delayed"||o.transfer)throw Error("Transfer request unavailable.");
+if(!p||(method!=="pickup"&&method!=="delivery")||(method==="delivery"&&!p.delivery))throw Error("Invalid pharmacy or fulfillment choice.");
+o.transfer={target:p.name,method,status:"awaiting pharmacy review",approvedByPatient:true};
+o.history.push("Patient approved a simulated transfer request to "+p.name+" for "+method+". Pending pharmacy review.");
+}
+function reviewTransfer(id,approved){
+const o=orders.find(x=>x.id===id);
+if(!o||!o.transfer||o.transfer.status!=="awaiting pharmacy review")throw Error("No pending transfer request.");
+o.transfer.status=approved?"awaiting prescriber or authorized transfer review":"declined by pharmacy";
+o.history.push(approved?"Destination pharmacy accepted coordination request; legal transfer/prescriber review required.":"Destination pharmacy declined request.");
+}
+function finalizeTransfer(id){
+const o=orders.find(x=>x.id===id);
+if(!o||!o.transfer||o.transfer.status!=="awaiting prescriber or authorized transfer review")throw Error("Not ready for simulated authorization.");
+o.pharmacy=o.transfer.target;o.transfer.status="simulated authorization completed";
+o.status="received";o.delayReason="";
+o.history.push("Simulated authorized transfer/reissue completed. Destination pharmacy must process order.");
+}
 function render(){
 const role=document.getElementById("role").value;
 const create=role==="prescriber"?'<section class="card"><h3>Create simulated prescription</h3><form id="newOrder"><label>Fictional patient <input name="patient" maxlength="80" required placeholder="Alex Sample"></label><label>Demo medication <input name="medication" maxlength="80" required placeholder="Demo Medication C"></label><label>Pharmacy <input name="pharmacy" maxlength="80" required placeholder="Sample Pharmacy"></label><button type="submit">Create order</button></form></section>':"";
-const cards=orders.map(o=>'<section class="card"><div class="row"><h3>'+escapeHtml(o.id)+' · '+escapeHtml(o.medication)+'</h3><span class="tag">'+labels[o.status]+'</span></div><p class="muted">Patient: '+escapeHtml(o.patient)+' · '+escapeHtml(o.pharmacy)+'</p>'+(o.delayReason?'<p><strong>Delay:</strong> '+escapeHtml(o.delayReason)+'</p>':"")+'<strong>Journey</strong><ol class="timeline">'+o.history.map(h=>'<li>'+escapeHtml(h)+'</li>').join("")+'</ol>'+(role==="pharmacy"?'<div class="actions">'+transitions[o.status].map(s=>'<button data-id="'+o.id+'" data-status="'+s+'">Mark '+labels[s]+'</button>').join("")+'</div>':'<p class="muted">'+(role==="patient"?(o.status==="ready"?"Ready for pickup (simulation). Confirm directly with your actual pharmacy for real prescriptions.":"Track simulated pharmacy updates here."):"Prescriber can monitor simulated fulfillment exceptions.")+'</p>')+'</section>').join("");
+const cards=orders.map(o=>'<section class="card"><div class="row"><h3>'+escapeHtml(o.id)+' · '+escapeHtml(o.medication)+'</h3><span class="tag">'+labels[o.status]+'</span></div><p class="muted">Patient: '+escapeHtml(o.patient)+' · '+escapeHtml(o.pharmacy)+'</p>'+(o.delayReason?'<p><strong>Delay:</strong> '+escapeHtml(o.delayReason)+'</p>':"")++(o.transfer?'<p><strong>SmartTransfer:</strong> '+escapeHtml(o.transfer.status)+' · '+escapeHtml(o.transfer.target)+' · '+escapeHtml(o.transfer.method)+'</p>':"")+'<strong>Journey</strong><ol class="timeline">'+o.history.map(h=>'<li>'+escapeHtml(h)+'</li>').join("")+'</ol>'+(role==="pharmacy"?'<div class="actions">'+transitions[o.status].map(s=>'<button data-id="'+o.id+'" data-status="'+s+'">Mark '+labels[s]+'</button>').join("")+'</div>':'<p class="muted">'+(role==="patient"?(o.status==="ready"?"Ready for pickup (simulation). Confirm directly with your actual pharmacy for real prescriptions.":"Track simulated pharmacy updates here."):"Prescriber can monitor simulated fulfillment exceptions.")+'</p>')+(role==="patient"&&o.status==="delayed"&&!o.transfer?'<div class="actions"><label>Alternative pharmacy <select id="target-'+o.id+'">'+alternatives.map(p=>'<option value="'+p.id+'">'+escapeHtml(p.name)+' — '+escapeHtml(p.stock)+'</option>').join("")+'</select></label><label>Fulfillment <select id="method-'+o.id+'"><option value="pickup">Pickup</option><option value="delivery">Delivery (where supported)</option></select></label><button data-transfer="'+o.id+'">Approve and request transfer review</button></div>':"")+(role==="pharmacy"&&o.transfer&&o.transfer.status==="awaiting pharmacy review"?'<div class="actions"><button data-review="'+o.id+'" data-decision="yes">Accept coordination request</button><button data-review="'+o.id+'" data-decision="no">Decline request</button></div>':"")+(role==="prescriber"&&o.transfer&&o.transfer.status==="awaiting prescriber or authorized transfer review"?'<button data-finalize="'+o.id+'">Simulate authorized transfer/reissue</button>':"")+'</section>').join("");
 document.getElementById("content").innerHTML='<h2>'+({patient:"Patient tracking",pharmacy:"Pharmacy queue",prescriber:"Prescriber dashboard"}[role])+'</h2>'+create+cards;
+document.querySelectorAll("button[data-transfer]").forEach(b=>b.addEventListener("click",()=>{try{const id=b.dataset.transfer;const p=document.getElementById("target-"+id).value,m=document.getElementById("method-"+id).value;const dest=alternatives.find(x=>x.id===p);if(m==="delivery"&&!dest.delivery)throw Error("Delivery is unavailable for that pharmacy.");if(!confirm("Approve simulated transfer request to "+dest.name+" for "+m+"? This does not transfer a real prescription."))return;requestTransfer(id,p,m);render()}catch(e){alert(e.message)}}));
+document.querySelectorAll("button[data-review]").forEach(b=>b.addEventListener("click",()=>{try{reviewTransfer(b.dataset.review,b.dataset.decision==="yes");render()}catch(e){alert(e.message)}}));
+document.querySelectorAll("button[data-finalize]").forEach(b=>b.addEventListener("click",()=>{try{finalizeTransfer(b.dataset.finalize);render()}catch(e){alert(e.message)}}));
 const form=document.getElementById("newOrder");
 if(form)form.addEventListener("submit",e=>{e.preventDefault();try{createOrder(Object.fromEntries(new FormData(form)));render()}catch(err){alert(err.message)}});
 document.querySelectorAll("button[data-id]").forEach(b=>b.addEventListener("click",()=>{
