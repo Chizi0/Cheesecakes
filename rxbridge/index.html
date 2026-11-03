@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RxFulfill | Medication Journey Demo</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#16233a;background:#f5f7fb}*{box-sizing:border-box}body{margin:0}header{background:#163b67;color:white;padding:24px max(20px,calc((100vw - 900px)/2))}header h1{margin:0;font-size:2rem}header p{margin:6px 0 0}main{max-width:900px;margin:auto;padding:24px 16px}.notice{background:#fff3d5;border:1px solid #e4c477;border-radius:10px;padding:12px;margin-bottom:20px}.toolbar,.card{background:white;border:1px solid #e0e5ee;border-radius:14px;padding:20px;margin-bottom:16px}.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}select,button{font:inherit;padding:10px;border-radius:8px;border:1px solid #aab7c8}button{background:#163b67;color:white;cursor:pointer}button:disabled{background:#aab7c8;cursor:not-allowed}button:hover:not(:disabled){filter:brightness(1.12)}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #76b5f7;outline-offset:2px}.muted{color:#536176}.tag{display:inline-block;background:#e7eff9;border-radius:99px;padding:5px 12px;font-weight:600}.row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}h2{margin:0 0 8px}h3{margin:0 0 12px}.timeline{margin:16px 0;padding-left:20px}.timeline li{margin:7px 0}.actions{display:flex;gap:10px;flex-wrap:wrap}.empty{padding:25px;text-align:center;color:#536176}
+input{display:block;width:100%;max-width:440px;padding:10px;margin:6px 0 14px;border:1px solid #aab7c8;border-radius:8px}form label{display:block;font-weight:600}
+:root{--ink:#15243a;--accent:#165d73;--soft:#e8f5f6;--border:#dce6ed}
+body{background:linear-gradient(180deg,#eef7f8 0,#f7f9fc 280px);color:var(--ink)}
+header{background:linear-gradient(115deg,#102f45,#176c7c);padding-top:34px;padding-bottom:34px}
+header h1{letter-spacing:-.035em;font-size:2.35rem}header p{color:#d5edf0}
+main{max-width:1040px}.toolbar,.card{box-shadow:0 6px 22px rgba(18,46,64,.035);border-color:var(--border)}
+button{background:#126577;border:0;font-weight:650}button:hover:not(:disabled){background:#0b4c5b}
+select{background:white}.tag{background:#e6f1f4;color:#1c5866;font-size:.83rem}
+.notice{background:#fff9e9;border-color:#f0db9e}
+.intro{margin:22px 0 18px}.intro h2{font-size:1.7rem;letter-spacing:-.025em}.intro p{color:#526579;margin:0}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.metric{background:white;border:1px solid var(--border);border-radius:14px;padding:16px}
+.metric strong{display:block;font-size:1.8rem;line-height:1.3}.metric span{color:#526579;font-size:.84rem}
+.card h3{letter-spacing:-.015em}.status-delayed{background:#fff0e5;color:#9b4d12}.status-ready{background:#e5f7eb;color:#16683b}.status-picked-up{background:#edf0f6;color:#48566b}
+.progress{display:flex;gap:5px;margin:12px 0 7px}.progress span{height:7px;background:#e7edf1;border-radius:20px;flex:1}.progress span.done{background:#2b96a3}
+.progress-label{font-size:.78rem;color:#627385;margin-bottom:14px}
+.card-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.card-heading h3{margin-bottom:4px}.card-heading .muted{margin:0}
+.journey-toggle{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+.journey-toggle summary{cursor:pointer;font-weight:650;color:#195b6b}
+.journey-toggle ol{margin-bottom:4px}
+.role-note{background:var(--soft);padding:12px 15px;border-radius:10px;color:#225c68;margin:12px 0 18px}
+@media(max-width:620px){header h1{font-size:1.85rem}.metrics{gap:8px}.metric{padding:12px}.metric strong{font-size:1.4rem}.metric span{font-size:.72rem}.card,.toolbar{padding:15px}.actions{align-items:stretch}.actions button{width:100%}}
+.discovery{background:#f2f9fa;border:1px solid #d3e8ea;border-radius:14px;padding:16px;margin-top:16px}.discovery h4{margin:0 0 6px;font-size:1.05rem}.discovery>.muted{font-size:.85rem}.pharmacy-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.pharmacy-option{display:flex;gap:10px;align-items:flex-start;background:white;border:1px solid #d4e1e8;border-radius:12px;padding:13px;cursor:pointer}.pharmacy-option:has(input:checked){border-color:#14778a;box-shadow:0 0 0 2px #c8ebef}.pharmacy-option input{width:auto;margin:3px 0 0;accent-color:#14778a}.pharmacy-info{display:grid;gap:5px}.pharmacy-info small{font-size:.78rem;color:#526579}.method-label{display:block;font-weight:650;margin:12px 0}.method-label select{display:block;margin-top:6px;width:100%;max-width:350px}@media(max-width:620px){.pharmacy-options{grid-template-columns:1fr}}.transfer-panel{border:1px solid #b9dfe2;background:#f2fafb;border-radius:14px;padding:16px;margin:15px 0}.transfer-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.transfer-pill{font-size:.75rem;font-weight:750;background:#d8eef0;color:#155766;border-radius:99px;padding:5px 10px}.transfer-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));list-style:none;padding:0;margin:17px 0 12px;gap:7px}.transfer-steps li{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;font-size:.76rem;font-weight:650;color:#506678}.step-dot{display:grid;place-items:center;border-radius:50%;width:29px;height:29px;background:#e2e9ee;color:#526579}.complete .step-dot{background:#187787;color:white}.current .step-dot{background:#fff;color:#146679;border:2px solid #187787}.transfer-guidance{font-size:.88rem;margin:8px 0 0;color:#275869}@media(max-width:620px){.transfer-steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:16px}}</style></head><body><header><h1>RxFulfill</h1><p>From prescription to pickup.</p></header><main><div class="notice"><strong>Demo only.</strong> Fictional patients and prescriptions. No real prescribing, pharmacy connections, or medical guidance.</div><div class="toolbar"><label for="role"><strong>View as</strong></label><select id="role"><option value="patient">Patient</option><option value="pharmacy">Pharmacy</option><option value="prescriber">Prescriber</option></select><button id="reset">Reset demo</button></div><div id="content" aria-live="polite"></div></main>
+<script>
+const seed=[
+{id:"RX-1001",patient:"Jordan Lee",medication:"Demo Medication A",pharmacy:"Main Street Pharmacy",status:"processing",history:["Prescription received","Pharmacy started processing"],delayReason:""},
+{id:"RX-1002",patient:"Taylor Morgan",medication:"Demo Medication B",pharmacy:"Central Pharmacy",status:"delayed",history:["Prescription received","Pharmacy reported a fulfillment delay"],delayReason:"Stock unavailable (simulation)"}
+];
+seed.forEach(o=>{o.transfer=null;o.transferOutcome=null;});
+let orders=structuredClone(seed);
+let sequence=1003;
+const alternatives=[{id:"north",name:"Northside Pharmacy",pickup:true,delivery:true,stock:"Available (simulated)",distance:"2.1 mi (fictional)",pickupEta:"Today, 4–6 PM (estimate)",deliveryEta:"Tomorrow (estimate)"},{id:"park",name:"Park Avenue Pharmacy",pickup:true,delivery:false,stock:"Available (simulated)",distance:"3.8 mi (fictional)",pickupEta:"Tomorrow, 10 AM–12 PM (estimate)",deliveryEta:null}];
+const transitions={received:["processing","delayed"],processing:["ready","delayed"],delayed:["processing"],ready:["picked up"],"picked up":[]};
+const labels={received:"Received",processing:"Processing",delayed:"Delayed",ready:"Ready for pickup","picked up":"Picked up"};
+const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function createOrder(data){
+const patient=data.patient.trim(),medication=data.medication.trim(),pharmacy=data.pharmacy.trim();
+if(!patient||!medication||!pharmacy)throw Error("All fields are required.");
+if([patient,medication,pharmacy].some(s=>s.length>80))throw Error("Fields must be 80 characters or fewer.");
+const order={id:"RX-"+sequence++,patient,medication,pharmacy,status:"received",history:["Prescriber created a simulated prescription","Prescription received"],delayReason:"",transfer:null,transferOutcome:null};
+orders.unshift(order);return order;
+}
+function advanceOrder(id,next,reason=""){
+const o=orders.find(x=>x.id===id);
+if(!o||!transitions[o.status].includes(next))throw Error("Invalid status transition.");
+if(o.transfer&&["awaiting pharmacy review","awaiting prescriber or authorized transfer review"].includes(o.transfer.status))throw Error("Resolve the pending transfer request first.");
+if(next==="delayed"&&!reason.trim())throw Error("A delay reason is required.");
+if(reason.length>160)throw Error("Delay reason must be 160 characters or fewer.");
+o.status=next;
+o.delayReason=next==="delayed"?reason.trim():"";
+o.history.push(next==="delayed"?"Pharmacy reported delay: "+o.delayReason:"Status updated to "+labels[next]);
+return o;
+}
+function requestTransfer(id,pharmacyId,method){
+const o=orders.find(x=>x.id===id),p=alternatives.find(x=>x.id===pharmacyId);
+if(!o||o.status!=="delayed"||o.transfer)throw Error("Transfer request unavailable.");
+if(!p||(method!=="pickup"&&method!=="delivery")||(method==="delivery"&&!p.delivery)||(method==="pickup"&&!p.pickup))throw Error("Invalid pharmacy or fulfillment choice.");
+o.transferOutcome=null;o.transfer={target:p.name,method,status:"awaiting pharmacy review",approvedByPatient:true};
+o.history.push("Patient approved a simulated transfer request to "+p.name+" for "+method+". Pending pharmacy review.");
+}
+function reviewTransfer(id,approved){
+const o=orders.find(x=>x.id===id);
+if(!o||!o.transfer||o.transfer.status!=="awaiting pharmacy review")throw Error("No pending transfer request.");
+o.transfer.status=approved?"awaiting prescriber or authorized transfer review":"declined by pharmacy";
+o.history.push(approved?"Destination pharmacy accepted coordination request; legal transfer/prescriber review required.":"Destination pharmacy declined request.");
+if(!approved){o.transferOutcome="Destination pharmacy declined the simulated request. Choose another pharmacy and try again.";o.transfer=null;}
+}
+function finalizeTransfer(id){
+const o=orders.find(x=>x.id===id);
+if(!o||!o.transfer||o.transfer.status!=="awaiting prescriber or authorized transfer review")throw Error("Not ready for simulated authorization.");
+o.pharmacy=o.transfer.target;o.transfer.status="simulated authorization completed";
+o.status="received";o.delayReason="";
+o.history.push("Simulated authorized transfer/reissue completed. Destination pharmacy must process order.");
+}
+function progressMarkup(o){
+const stages=["received","processing","ready","picked up"];
+const step=o.status==="delayed"?1:Math.max(1,stages.indexOf(o.status)+1);
+return '<div class="progress" role="img" aria-label="'+step+' of 4 fulfillment stages completed">'+stages.map((s,i)=>'<span class="'+(i<step?'done':'')+'"></span>').join("")+'</div><div class="progress-label">'+(o.status==="delayed"?"Fulfillment paused — action may be needed":step+" of 4 fulfillment stages")+'</div>';
+}
+function transferTracking(o){
+if(!o.transfer&&!o.transferOutcome)return "";
+const t=o.transfer,steps=["Request submitted","Pharmacy review","Authorization review","Transfer completed"];
+const state=t?.status;
+const active=state==="awaiting pharmacy review"?1:state==="awaiting prescriber or authorized transfer review"?2:state==="simulated authorization completed"?4:0;
+const guidance=state==="awaiting pharmacy review"?"Waiting for the destination pharmacy to review the request.":state==="awaiting prescriber or authorized transfer review"?"Pharmacy accepted. Waiting for simulated authorized transfer/reissue review.":state==="simulated authorization completed"?"Transfer coordination completed in the demo. The destination pharmacy can process fulfillment.":o.transferOutcome;
+return '<section class="transfer-panel" aria-label="Simulated transfer status"><div class="transfer-head"><strong>SmartTransfer status</strong><span class="transfer-pill">'+(t?active===4?"Completed":"In review":"Declined")+'</span></div>'+(t?'<p class="muted">'+escapeHtml(t.target)+' · '+escapeHtml(t.method)+'</p>':'')+'<ol class="transfer-steps">'+steps.map((label,i)=>'<li class="'+(i<active?"complete":i===active?"current":"future")+'"><span class="step-dot">'+(i<active?"✓":i+1)+'</span><span>'+label+'</span></li>').join("")+'</ol><p class="transfer-guidance">'+escapeHtml(guidance)+'</p>'+(o.transferOutcome?'<p class="muted">You can submit a new simulated request using the pharmacy choices below.</p>':'')+'</section>';
+}
+function pharmacyChoices(id){
+return '<div class="discovery"><h4>Find another pharmacy</h4><p class="muted">Availability, distances, and estimates below are fictional. No live inventory checks.</p><div class="pharmacy-options">'+alternatives.map((p,i)=>'<label class="pharmacy-option"><input type="radio" name="target-'+id+'" value="'+p.id+'" '+(i===0?'checked':'')+'><span class="pharmacy-info"><strong>'+escapeHtml(p.name)+'</strong><small>'+escapeHtml(p.distance)+' · '+escapeHtml(p.stock)+'</small><small>Pickup: '+escapeHtml(p.pickupEta)+'</small><small>Delivery: '+(p.delivery?escapeHtml(p.deliveryEta):'Not supported')+'</small></span></label>').join("")+'</div><label class="method-label">Fulfillment method <select id="method-'+id+'"><option value="pickup">Pickup</option><option value="delivery">Delivery (eligible locations only)</option></select></label><p class="muted" id="method-note-'+id+'">Review the simulated pharmacy details before requesting coordination.</p><button data-transfer="'+id+'">Request simulated transfer review</button></div>';
+}
+function render(){
+const role=document.getElementById("role").value;
+const create=role==="prescriber"?'<section class="card"><h3>Create simulated prescription</h3><form id="newOrder"><label>Fictional patient <input name="patient" maxlength="80" required placeholder="Alex Sample"></label><label>Demo medication <input name="medication" maxlength="80" required placeholder="Demo Medication C"></label><label>Pharmacy <input name="pharmacy" maxlength="80" required placeholder="Sample Pharmacy"></label><button type="submit">Create order</button></form></section>':"";
+const delayed=orders.filter(o=>o.status==="delayed").length;
+const ready=orders.filter(o=>o.status==="ready").length;
+const roleTitle={patient:"Patient tracking",pharmacy:"Pharmacy queue",prescriber:"Prescriber dashboard"}[role];
+const roleDesc={patient:"Follow fictional prescription progress and explore alternative fulfillment options.",pharmacy:"Review fulfillment statuses and coordinate simulated transfers.",prescriber:"Create simulated orders and review exceptions requiring authorization."}[role];
+const metrics='<div class="metrics"><div class="metric"><strong>'+orders.length+'</strong><span>Total prescriptions</span></div><div class="metric"><strong>'+delayed+'</strong><span>Delayed</span></div><div class="metric"><strong>'+ready+'</strong><span>Ready for pickup</span></div></div>';
+const cards=orders.map(o=>'<section class="card"><div class="row"><h3>'+escapeHtml(o.id)+' · '+escapeHtml(o.medication)+'</h3><span class="tag">'+labels[o.status]+'</span></div><p class="muted">Patient: '+escapeHtml(o.patient)+' · '+escapeHtml(o.pharmacy)+'</p>'+(o.delayReason?'<p><strong>Delay:</strong> '+escapeHtml(o.delayReason)+'</p>':"")+transferTracking(o)+progressMarkup(o)+'<details class="journey-toggle"><summary>View activity history ('+o.history.length+')</summary><ol class="timeline">'+o.history.map(h=>'<li>'+escapeHtml(h)+'</li>').join("")+'</ol></details>'+(role==="pharmacy"?'<div class="actions">'+transitions[o.status].map(s=>'<button data-id="'+o.id+'" data-status="'+s+'">Mark '+labels[s]+'</button>').join("")+'</div>':'<p class="muted">'+(role==="patient"?(o.status==="ready"?"Ready for pickup (simulation). Confirm directly with your actual pharmacy for real prescriptions.":"Track simulated pharmacy updates here."):"Prescriber can monitor simulated fulfillment exceptions.")+'</p>')+(role==="patient"&&o.status==="delayed"&&!o.transfer?pharmacyChoices(o.id):"")+(role==="pharmacy"&&o.transfer&&o.transfer.status==="awaiting pharmacy review"?'<div class="actions"><button data-review="'+o.id+'" data-decision="yes">Accept coordination request</button><button data-review="'+o.id+'" data-decision="no">Decline request</button></div>':"")+(role==="prescriber"&&o.transfer&&o.transfer.status==="awaiting prescriber or authorized transfer review"?'<button data-finalize="'+o.id+'">Simulate authorized transfer/reissue</button>':"")+'</section>').join("");
+document.getElementById("content").innerHTML='<div class="intro"><h2>'+roleTitle+'</h2><p>'+roleDesc+'</p></div>'+metrics+create+cards;
+document.querySelectorAll('.discovery').forEach(section=>{
+const selected=()=>alternatives.find(p=>p.id===section.querySelector('input[type="radio"]:checked')?.value);
+const method=section.querySelector('select');
+const note=section.querySelector('[id^="method-note-"]');
+function sync(){const p=selected();if(!p)return;method.querySelector('option[value="delivery"]').disabled=!p.delivery;if(!p.delivery&&method.value==="delivery")method.value="pickup";note.textContent=(method.value==="delivery"?p.deliveryEta:p.pickupEta)+" · Fictional estimate; not a reservation or confirmed stock.";}
+section.querySelectorAll('input[type="radio"]').forEach(input=>input.addEventListener("change",sync));
+method.addEventListener("change",sync);sync();
+});
+document.querySelectorAll("button[data-transfer]").forEach(b=>b.addEventListener("click",()=>{try{const id=b.dataset.transfer;const p=document.querySelector('input[name="target-'+id+'"]:checked')?.value,m=document.getElementById("method-"+id).value;const dest=alternatives.find(x=>x.id===p);if(m==="delivery"&&!dest.delivery)throw Error("Delivery is unavailable for that pharmacy.");if(!confirm("Approve simulated transfer request to "+dest.name+" for "+m+"? This does not transfer a real prescription."))return;requestTransfer(id,p,m);render()}catch(e){alert(e.message)}}));
+document.querySelectorAll("button[data-review]").forEach(b=>b.addEventListener("click",()=>{try{reviewTransfer(b.dataset.review,b.dataset.decision==="yes");render()}catch(e){alert(e.message)}}));
+document.querySelectorAll("button[data-finalize]").forEach(b=>b.addEventListener("click",()=>{try{finalizeTransfer(b.dataset.finalize);render()}catch(e){alert(e.message)}}));
+const form=document.getElementById("newOrder");
+if(form)form.addEventListener("submit",e=>{e.preventDefault();try{createOrder(Object.fromEntries(new FormData(form)));render()}catch(err){alert(err.message)}});
+document.querySelectorAll("button[data-id]").forEach(b=>b.addEventListener("click",()=>{
+try{
+const next=b.dataset.status;
+const reason=next==="delayed"?prompt("Simulated delay reason (required, max 160 characters):"):"";
+if(next==="delayed"&&reason===null)return;
+advanceOrder(b.dataset.id,next,reason||"");render();
+}catch(err){alert(err.message)}
+}));
+}
+document.getElementById("role").addEventListener("change",render);
+document.getElementById("reset").addEventListener("click",()=>{orders=structuredClone(seed);sequence=1003;render()});
+render();
+</script></body></html>

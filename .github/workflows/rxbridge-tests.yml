@@ -1,0 +1,21 @@
+name: RxFulfill prototype tests
+on:
+  pull_request:
+    paths:
+      - 'rxbridge/**'
+      - '.github/workflows/rxbridge-tests.yml'
+  push:
+    branches:
+      - 'feature/rxbridge-medication-journey'
+    paths:
+      - 'rxbridge/**'
+      - '.github/workflows/rxbridge-tests.yml'
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - run: node rxbridge/test.cjs
