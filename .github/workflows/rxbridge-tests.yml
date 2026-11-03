@@ -1,4 +1,4 @@
-name: RxBridge prototype tests
+name: RxFulfill prototype tests
 on:
   pull_request:
     paths:
