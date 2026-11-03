@@ -1,4 +1,4 @@
-# RxBridge MVP test plan
+# RxFulfill MVP test plan
 
 All test data must be fictional. No actual prescriptions, pharmacies, patient identifiers, or protected health information.
 
