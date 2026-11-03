@@ -1,4 +1,4 @@
-# RxBridge — Prescription-to-Pickup Journey
+# RxFulfill — Prescription Fulfillment & Pharmacy Transfer Simulator
 
 A portfolio prototype that models how a prescription moves from a prescriber to a pharmacy and then to the patient.
 
