@@ -29,7 +29,8 @@ assert.equal(run('orders[2].transfer.status'),'awaiting prescriber or authorized
 run('finalizeTransfer("RX-1002")');
 assert.equal(run('orders[2].pharmacy'),'Northside Pharmacy');
 assert.equal(run('orders[2].status'),'received');
-assert.throws(()=>run('requestTransfer("RX-1001","park","delivery")'),/unavailable/);
+run('advanceOrder("RX-1001","delayed","Stock unavailable")');
+assert.throws(()=>run('requestTransfer("RX-1001","park","delivery")'),/Invalid pharmacy or fulfillment choice/);
 run('advanceOrder("RX-1002","processing")');
 run('advanceOrder("RX-1002","ready")');
 assert.equal(run('orders[2].status'),'ready');
